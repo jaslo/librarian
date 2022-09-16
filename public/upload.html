@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload a file</title>
+</head>
+<body>
+<form method="POST" enctype="multipart/form-data">
+    <div class="mb-3">
+        <label for="filenumber" class="form-label">Number (optional):</label>
+        <input type="text" class="form-control" id="filenumber">
+    </div>
+    <div class="mb-3">
+        <label for="docname" class="form-label">Document name (optional)</label>
+        <input type="text" class="form-control" id="docname">
+    </div>
+    <div class="mb-3">
+        <label for="formFile" class="form-label">Choose File (optional)</label>
+        <input class="form-control" type="file" id="formFile">
+    </div>
+
+    <input type="submit">
+</form>
+</body>
+</html>

@@ -4,6 +4,8 @@ import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import session from 'express-session';
 import bb from 'express-busboy';
+// import busboy from 'connect-busboy';
+
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import {MongoClient, ServerApiVersion} from 'mongodb';
@@ -18,10 +20,16 @@ var app = express();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+g.publicDir = path.join(__dirname, 'public/');
 
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+// app.use(busboy());
+bb.extend(app, {
+    upload: true,
+    allowedPath: /./
+});
 
 app.engine('html', ejsRender);
 app.set('view engine', 'html');
@@ -41,12 +49,6 @@ app.use(session({
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 
-bb.extend(app, {
-    upload: true,
-    path: '/var/librarian/files',
-    allowedPath: /./
-});
-
 // mongodb
 const mongodb = new MongoClient(g.dburi, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
@@ -64,6 +66,17 @@ async function main() {
         {name: g.defname},
         {$set: {
                 hashpass: hash,
+                verified: true,
+                upload: true,
+                downloads: []
+            }},
+        {upsert: true, returnNewDocument: true}
+    );
+    const uppass = await g.hashit(g.uploadPass);
+    await g.users.findOneAndUpdate(
+        {name: g.uploaderName},
+        {$set: {
+                hashpass: uppass,
                 verified: true,
                 upload: true,
                 downloads: []

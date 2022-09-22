@@ -11,21 +11,46 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 </head>
 <body>
-<form method="POST" action="/upload" enctype="multipart/form-data">
-    <div class="mb-3">
-        <label for="filenumber" class="form-label">Number (optional):</label>
-        <input type="text" class="form-control" name="filenumber" id="filenumber">
-    </div>
-    <div class="mb-3">
-        <label for="docname" class="form-label">Document name (optional)</label>
-        <input type="text" class="form-control" name="docname" id="docname">
-    </div>
+<form method="POST" action="/upload" enctype="multipart/form-data" id="mainform">
     <div class="mb-3">
         <label for="formFile" class="form-label">Choose File (optional)</label>
-        <input class="form-control" type="file" name="formFiles" id="formFile" multiple>
+        <input class="form-control" type="file" name="formFiles" id="formFiles" multiple>
     </div>
-
-    <input type="submit">
 </form>
+<script>
+    function filedetails(n) {
+        return `
+        <div class="mb-3">
+            <label for="filename${n}" class="form-label">Upload Filename:</label>
+            <input type="text" class="form-control" name="filename${n}" id="filename${n}" readonly>
+        </div>
+        <div class="mb-3">
+            <label for="filenumber${n}" class="form-label">Number (optional):</label>
+            <input type="text" class="form-control" name="filenumber${n}" id="filenumber${n}">
+        </div>
+        <div class="mb-3">
+            <label for="docname${n}" class="form-label">Document name (optional)</label>
+            <input type="text" class="form-control" name="docname${n}" id="docname${n}">
+        </div>
+      `;
+    }
+
+    mainform = document.getElementById("mainform");
+    formElement = document.getElementById("formFiles");
+    formElement.addEventListener("input", (event) => {
+        for (var i = 1; i <= formElement.files.length; i++) {
+            var f = formElement.files[i-1];
+            mainform.insertAdjacentHTML('beforeend', filedetails(i));
+            document.getElementById(`filename${i}`).value = f.name;
+            var fname1 = f.name.replaceAll('-',' ');
+            var result = fname1.match(/([^0-9]*)([0-9]*)\.(.*)/);
+
+            var fnamepart = f.name.split('.')[0];
+            document.getElementById(`docname${i}`).value = result[1].trim();
+            document.getElementById(`filenumber${i}`).value = result[2].trim();
+        }
+        mainform.insertAdjacentHTML('beforeend',`<input type="submit">`);
+    })
+</script>
 </body>
 </html>

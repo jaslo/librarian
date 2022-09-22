@@ -2,6 +2,7 @@ import express from 'express';
 import g from '../globals.js';
 import path from 'path';
 import fs from 'fs';
+import util from 'util';
 
 const router = express.Router();
 
@@ -46,26 +47,55 @@ router.post('/upload', (req, res) => {
 //    req.pipe(req.busboy);
 */
   if (req.files && req.files.formFiles) {
-    if (!Array.isArray(req.files.formFiles) {
+    if (!Array.isArray(req.files.formFiles)) {
       req.files.formFiles = [req.files.formFiles];
     }
+
+    let filemap = {};
+
+    for (let count = 1; ; count++) {
+      let filename = req.body['filename' + count];
+      if (!filename) break;
+      let filenumber = req.body['filenumber' + count];
+      let docname = req.body['docname' + count];
+      filemap[filename] = {
+        filenumber: filenumber,
+        docname: docname
+      };
+    }
+
     req.files.formFiles.forEach(async (ff) => {
-      let orig = ff.file;
-      let newpath = g.publicDir + 'files/' + ff.filename;
-      await fs.rename(orig, newpath);
-      let webpath = g.publicDir + 'files/' + ff.filename;
-      console.log('dlpath = ' + webpath);
-      await g.files.findOneAndUpdate(
-        {urlpath: webpath},
-        {$set: {
-            path: hash,
-            filenumber: req.fields.filenumber,
-            docname: req.fields.docname | ff.filename,
-            urlpath: webpath,
-            downloads: []
-          }},
-        {upsert: true, returnNewDocument: true}
-      );
+      try {
+        let orig = ff.file;
+        let newpath = g.publicDir + 'files/' + ff.filename;
+        await new Promise((resolve, reject) => {
+            fs.rename(orig, newpath, (data, err) => {
+              if (!err) resolve(data);
+              else throw(err);
+            });
+        });
+        let webpath = g.publicDir + 'files/' + ff.filename;
+        console.log('dlpath = ' + webpath);
+        // find the corresponding fields in req.body
+        let fmeta = filemap[ff.filename];
+        if (!fmeta) throw "missing metadata";
+        await g.files.findOneAndUpdate(
+            {urlpath: webpath},
+            {
+              $set: {
+                name: ff.filename,
+                filenumber: fmeta.filenumber,
+                docname: fmeta.docname || ff.filename,
+                urlpath: webpath,
+                downloads: []
+              }
+            },
+            {upsert: true, returnNewDocument: true}
+        );
+      }
+      catch(e) {
+        console.log('error ' + e + ' processing file');
+      }
     });
   }
 });

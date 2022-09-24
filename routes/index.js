@@ -3,6 +3,7 @@ import g from '../globals.js';
 import path from 'path';
 import fs from 'fs';
 import util from 'util';
+import {ObjectID as ObjectId} from 'mongodb';
 
 const router = express.Router();
 
@@ -11,21 +12,39 @@ router.get('/', (req, res) => {
   if (req.session.user) {
     if (req.session.user.name == 'uploader') {
       res.render('upload');
+    } else {
+      showLibrary(req,res);
     }
-    let p = req.query.newfiles ?
-        // g.files.find({_id: {$nin: req.session.user.downloads}}) :
-        g.files.find({dlusers: { $in: [ req.session.user._id]}}):
-        g.files.find();
-    p.then((finds) => {
-      res.render('library', {files: finds});
-    });
   } else {
     res.render('login');
   }
 });
 
+function showLibrary(req,res) {
+  g.files.find({}, {
+    projection: {_id: 0, idstr: {$toString:"$_id"}, name: 1, filenumber: 1, docname: 1, downloads: {$elemMatch: { $eq: req.session.user.id}}},
+    sort: {filenumber: 1, docname: 1}
+  }).toArray().then((finds) => {
+    res.render('library', {files: finds});
+  });
+}
 router.get('/upload', (req,res) => {
   res.render('upload');
+});
+
+router.get('/download/:id', (req, res) => {
+  const id = req.params.id;
+  g.files.findOneAndUpdate({_id: new ObjectId(id)},
+  {$addToSet: {downloads: req.session.user._id}},
+      {returnDocument: "before"}).
+  then((fdoc) => {
+    res.download(fdoc.value.urlpath, fdoc.value.name, (err) => {
+      if (!err) {
+        res.status(200).end();
+      }
+      else res.status(500).end();
+    })
+  });
 });
 
 router.post('/upload', (req, res) => {
@@ -53,7 +72,8 @@ router.post('/upload', (req, res) => {
 
     let filemap = {};
 
-    for (let count = 1; ; count++) {
+    let count = 1;
+    for (count = 1; ; count++) {
       let filename = req.body['filename' + count];
       if (!filename) break;
       let filenumber = req.body['filenumber' + count];
@@ -63,6 +83,8 @@ router.post('/upload', (req, res) => {
         docname: docname
       };
     }
+
+    let updated = 0;
 
     req.files.formFiles.forEach(async (ff) => {
       try {
@@ -92,11 +114,18 @@ router.post('/upload', (req, res) => {
             },
             {upsert: true, returnNewDocument: true}
         );
+        updated++;
+        if (updated == count-1) {
+          res.redirect('/');
+        }
       }
       catch(e) {
         console.log('error ' + e + ' processing file');
       }
     });
+  }
+  else {
+    showLibrary(req,res);
   }
 });
 

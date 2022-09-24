@@ -35,6 +35,15 @@
       `;
     }
 
+    function initCap(name) {
+        let words = name.split(' ');
+        let wnew = [];
+        foreach(w in words, () => {
+            wnew.push(w.charAt(0).toUpperCase() + w.slice(1));
+        })
+        return wnew.join(' ');
+    }
+
     mainform = document.getElementById("mainform");
     formElement = document.getElementById("formFiles");
     formElement.addEventListener("input", (event) => {
@@ -44,9 +53,9 @@
             document.getElementById(`filename${i}`).value = f.name;
             var fname1 = f.name.replaceAll('-',' ');
             var result = fname1.match(/([^0-9]*)([0-9]*)\.(.*)/);
+            let fnameShow = initCap(result[1].trim());
 
-            var fnamepart = f.name.split('.')[0];
-            document.getElementById(`docname${i}`).value = result[1].trim();
+            document.getElementById(`docname${i}`).value = fnameShow;
             document.getElementById(`filenumber${i}`).value = result[2].trim();
         }
         mainform.insertAdjacentHTML('beforeend',`<input type="submit">`);

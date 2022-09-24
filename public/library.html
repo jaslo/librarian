@@ -9,9 +9,11 @@
 -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 
+  <script src="javascripts/download.js"></script>
+</head>
 <body>
   <h1>Librarian</h1>
-  <div class=""container">
+  <div class="container">
   <div class="btn-group" role="group" id="allfiles" aria-label="Select">
     <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked>
     <label class="btn btn-outline-primary" for="btnradio1">Show all files</label>
@@ -20,6 +22,31 @@
     <label class="btn btn-outline-primary" for="btnradio2">Show new files</label>
   </div>
   </div>
+  <script>
+    function downloader(id, fname) {
+      var x = new XMLHttpRequest();
+      var ct = '';
+      x.open("GET", "/download/" + id, true);
+      x.responseType = 'blob';
+      x.onreadystatechange = () => {
+        if (x.readyState === this.HEADERS_RECEIVED) {
+          ct = x.getResponseHeader("content-type");
+        }
+      }
+      x.onload = () => {
+        download(x.response, fname, x.response.type);
+      };
+      x.send();
+      //const resp = fetch('/download/' + id, () => {});
+    }
+  </script>
+  <ul class="list-group">
+    <% files.forEach((f) => { %>
+    <li class="list-group-item" onclick="downloader('<%=f.idstr%>','<%=f.name%>')">
+      <%=f.filenumber%> <a href="#"><%= f.docname%></a>
+    </li>
+    <% }) %>
+  </ul>
 
   <script>
     allfiles.onchange = () => {

@@ -3,6 +3,7 @@ import path from 'path';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import session from 'express-session';
+import MongoStore from 'connect-mongo';
 import bb from 'express-busboy';
 // import busboy from 'connect-busboy';
 
@@ -37,24 +38,26 @@ app.set('views', path.join(__dirname, 'public'));
 
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+
+// mongodb
+const mongodb = new MongoClient(g.dburi, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+const clientPromise = mongodb.connect();
+
 app.use(session({
     secret: 'charlie bit me',
     resave: false,
+    store: MongoStore.create({clientPromise}),
     saveUninitialized: true,
-    cookie: {
-        secure: 'auto'
-    }
 }))
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 
-// mongodb
-const mongodb = new MongoClient(g.dburi, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
 async function main() {
     // Use connect method to connect to the server
-    await mongodb.connect();
+    await clientPromise;
     console.log('Connected successfully to server');
     const db = mongodb.db(g.dbName);
     g.users = db.collection('users');

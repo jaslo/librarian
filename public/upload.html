@@ -38,10 +38,10 @@
     function initCap(name) {
         let words = name.split(' ');
         let wnew = [];
-        foreach(w in words, () => {
-            wnew.push(w.charAt(0).toUpperCase() + w.slice(1));
-        })
-        return wnew.join(' ');
+        for (var i = 0; i < words.length; i++) {
+            words[i] = words[i].charAt(0).toUpperCase() + words[i].slice(1);
+        }
+        return words.join(' ');
     }
 
     mainform = document.getElementById("mainform");

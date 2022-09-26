@@ -1,3 +1,7 @@
+<!DOCTYPE html>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
 <html>
 
 <head>
@@ -15,10 +19,10 @@
   <h1>Librarian</h1>
   <div class="container">
   <div class="btn-group" role="group" id="allfiles" aria-label="Select">
-    <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked>
-    <label class="btn btn-outline-primary" for="btnradio1">Show all files</label>
+    <input type="checkbox" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked>
+    <label class="btn btn-outline-primary" for="btnradio1">Show old (downloaded) files</label>
 
-    <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off">
+    <input type="checkbox" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off">
     <label class="btn btn-outline-primary" for="btnradio2">Show new files</label>
   </div>
   </div>
@@ -42,7 +46,7 @@
   </script>
   <ul class="list-group">
     <% files.forEach((f) => { %>
-    <li class="list-group-item" onclick="downloader('<%=f.idstr%>','<%=f.name%>')">
+    <li class="list-group-item" data-dlinfo="<%=f.downloads.length%>" onclick="downloader('<%=f.idstr%>','<%=f.name%>')">
       <%=f.filenumber%> <a href="#"><%= f.docname%></a>
     </li>
     <% }) %>

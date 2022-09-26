@@ -13,7 +13,7 @@ import {MongoClient, ServerApiVersion} from 'mongodb';
 import g from './globals.js';
 
 import indexRouter from './routes/index.js';
-import usersRouter from './routes/users.js';
+//import usersRouter from './routes/users.js';
 
 import {renderFile as ejsRender} from 'ejs';
 
@@ -52,7 +52,7 @@ app.use(session({
 }))
 
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
+// app.use('/users', usersRouter);
 
 
 async function main() {

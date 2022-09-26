@@ -12,12 +12,33 @@ router.get('/', (req, res) => {
   if (req.session.user) {
     if (req.session.user.name == 'uploader') {
       res.render('upload');
+    } else if (req.session.user.name == 'admin') {
+      showUsers(req,res);
     } else {
       showLibrary(req,res);
     }
   } else {
     res.render('login');
   }
+});
+
+function showUsers(req,res) {
+  g.users.find({}, {
+    projection: {_id: 0, idstr: {$toString:"$_id"}, name: 1, hashpass:0, verified: 1, upload: 1, downloads: {$size: "$downloads"}},
+    sort: {name}
+  }).toArray().then((users) => {
+    res.render('users', {users: users});
+  });
+}
+
+
+router.get('/logout', (req, res) => {
+  req.session.user = null;
+  req.session.save(() => {
+    req.session.regenerate(() => {
+      res.redirect('/');
+    });
+  });
 });
 
 function showLibrary(req,res) {

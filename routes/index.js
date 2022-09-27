@@ -24,8 +24,8 @@ router.get('/', (req, res) => {
 
 function showUsers(req,res) {
   g.users.find({}, {
-    projection: {_id: 0, idstr: {$toString:"$_id"}, name: 1, hashpass:0, verified: 1, upload: 1, downloads: {$size: "$downloads"}},
-    sort: {name}
+    projection: {_id: 0, idstr: {$toString:"$_id"}, name: 1, verified: 1, upload: 1, downloads: {$size: "$downloads"}},
+    sort: {name: 1}
   }).toArray().then((users) => {
     res.render('users', {users: users});
   });

@@ -16,8 +16,10 @@
 </head>
 <body>
 <p class="display-4 text-center">Librarian: manage users</p>
-
-<br>
+<div class="mb-3">
+    <label for="logout" class="form-label">Cancel and log in again</label>
+    <button id="logout" name="logout" onclick="window.location.href = '/logout';">Sign out</button>
+</div>
 <div class="container">
     <div class="row border-top border-bottom">
         <div class="col-3 fw-bold">Login name/email</div>
@@ -48,6 +50,12 @@
             </div>
             <div class="col-3">
                 <input type="checkbox" name="upload" id="upload" checked>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-3">
+                <label for="pass" class="form-label">Password</label>
+                <input type="text" class="form-control" name="pass" id="pass">
             </div>
         </div>
         <div class="row">

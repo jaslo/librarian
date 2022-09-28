@@ -5,10 +5,20 @@ import fs from 'fs';
 import util from 'util';
 import {ObjectID as ObjectId} from 'mongodb';
 
-const router = express.Router();
+const router = g.router;
+
+export function setRoutes(router) {
+  router.get('/', home);
+  router.get('/logout', logout);
+  router.post('/adduser', adduser);
+  router.get('/upload', upload);
+  router.get('/download/:id', downloadFile);
+  router.post('/upload', uploadFiles);
+  router.post('/login', login);
+}
 
 /* GET home page. */
-router.get('/', (req, res) => {
+function home(req, res) {
   if (req.session.user) {
     if (req.session.user.name == 'uploader') {
       res.render('upload');
@@ -20,7 +30,7 @@ router.get('/', (req, res) => {
   } else {
     res.render('login');
   }
-});
+}
 
 function showUsers(req,res) {
   g.users.find({}, {
@@ -32,33 +42,56 @@ function showUsers(req,res) {
 }
 
 
-router.get('/logout', (req, res) => {
+function logout(req, res) {
   req.session.user = null;
   req.session.save(() => {
     req.session.regenerate(() => {
       res.redirect('/');
     });
   });
-});
+}
+
+async function adduser(req,res) {
+  let user = req.body.username;
+  let pass = req.body.pass;
+  const hash = await g.hashit(pass);
+// upsert to the users collection
+  await g.users.findOneAndUpdate(
+      {name: user},
+      {$set: {
+          hashpass: hash,
+          verified: req.body.verified == "on",
+          upload: false,
+          downloads: []
+        }},
+      {upsert: true, returnNewDocument: true}
+  );
+  res.redirect('/')
+}
 
 function showLibrary(req,res) {
   g.files.find({}, {
-    projection: {_id: 0, idstr: {$toString:"$_id"}, name: 1, filenumber: 1, docname: 1, downloads: {$elemMatch: { $eq: req.session.user.id}}},
+    projection: {_id: 0, idstr: {$toString:"$_id"}, name: 1, filenumber: 1, docname: 1, downloads: {$elemMatch: { $eq: req.session.user._id}}},
     sort: {filenumber: 1, docname: 1}
   }).toArray().then((finds) => {
     res.render('library', {files: finds});
   });
 }
-router.get('/upload', (req,res) => {
-  res.render('upload');
-});
 
-router.get('/download/:id', (req, res) => {
+function upload(req,res) {
+  res.render('upload');
+}
+
+function downloadFile(req, res) {
   const id = req.params.id;
   g.files.findOneAndUpdate({_id: new ObjectId(id)},
   {$addToSet: {downloads: req.session.user._id}},
       {returnDocument: "before"}).
-  then((fdoc) => {
+  then(async (fdoc) => {
+    await g.users.findOneAndUpdate(
+        {_id: new ObjectId(req.session.user._id)},
+        {$addToSet: {downloads: id}},
+        {returnDocument: "before"});
     res.download(fdoc.value.urlpath, fdoc.value.name, (err) => {
       if (!err) {
         res.status(200).end();
@@ -66,26 +99,9 @@ router.get('/download/:id', (req, res) => {
       else res.status(500).end();
     })
   });
-});
+}
 
-router.post('/upload', (req, res) => {
-  /*
-  if (req.busboy) {
-    req.busboy.on('file', (name, file, info) => {
-      const { filename, encoding, mimeType } = info;
-      const saveTo = path.join(g.uploadDir, filename);
-      console.log('write file to path ' + saveTo);
-      file.pipe(fs.createWriteStream(saveTo));
-    });
-    req.busboy.on('field', (name, val, info) => {
-      console.log(`Field [${name}]: value: %j`, val);
-    });
-    req.busboy.on('close', () => {
-      res.writeHead(200, { 'Connection': 'close' });
-      res.end(`That's all folks!`);
-    });
-//    req.pipe(req.busboy);
-*/
+function uploadFiles(req, res) {
   if (req.files && req.files.formFiles) {
     if (!Array.isArray(req.files.formFiles)) {
       req.files.formFiles = [req.files.formFiles];
@@ -148,9 +164,9 @@ router.post('/upload', (req, res) => {
   else {
     showLibrary(req,res);
   }
-});
+}
 
-router.post('/login', (req,res) => {
+function login(req,res) {
   let user = req.body.user;
   let pass = req.body.pass;
   g.hashit(pass).then((hashpass) => {
@@ -163,6 +179,4 @@ router.post('/login', (req,res) => {
       }
     })
   })
-});
-
-export default router;
+}

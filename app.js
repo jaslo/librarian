@@ -12,8 +12,10 @@ import { dirname } from 'path';
 import {MongoClient, ServerApiVersion} from 'mongodb';
 import g from './globals.js';
 
-import indexRouter from './routes/index.js';
-//import usersRouter from './routes/users.js';
+g.router = express.Router();
+import {setRoutes} from './routes/index.js';
+
+setRoutes(g.router);
 
 import {renderFile as ejsRender} from 'ejs';
 
@@ -51,9 +53,8 @@ app.use(session({
     saveUninitialized: true,
 }))
 
-app.use('/', indexRouter);
+app.use('/', g.router);
 // app.use('/users', usersRouter);
-
 
 async function main() {
     // Use connect method to connect to the server

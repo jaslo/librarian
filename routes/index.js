@@ -74,7 +74,7 @@ function showLibrary(req,res) {
     projection: {_id: 0, idstr: {$toString:"$_id"}, name: 1, filenumber: 1, docname: 1, downloads: {$elemMatch: { $eq: req.session.user._id}}},
     sort: {filenumber: 1, docname: 1}
   }).toArray().then((finds) => {
-    res.render('library', {files: finds});
+    res.render('library', {files: finds, flags: req.query.flags});
   });
 }
 

@@ -24,11 +24,30 @@
 
   <div class="container">
   <div class="btn-group" role="group" id="allfiles" aria-label="Select">
-    <input type="checkbox" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked>
-    <label class="btn btn-outline-primary" for="btnradio1">Show old (downloaded) files</label>
+    <!--
 
-    <input type="checkbox" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off" checked>
-    <label class="btn btn-outline-primary" for="btnradio2">Show new files</label>
+<input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off">
+<label class="btn btn-outline-primary" for="btnradio3">Show all files</label>
+
+<input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off">
+<label class="btn btn-outline-primary" for="btnradio2">Show old (downloaded) files</label>
+
+<input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off">
+<label class="btn btn-outline-primary" for="btnradio1">Show new files</label>
+-->
+
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="radio" name="inlineRadioOptions" id="btnradio3" value="option1">
+      <label class="form-check-label" for="btnradio3">Show all files</label>
+    </div>
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="radio" name="inlineRadioOptions" id="btnradio2" value="option2">
+      <label class="form-check-label" for="btnradio2">Show old (downloaded) files</label>
+    </div>
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="radio" name="inlineRadioOptions" id="btnradio1" value="option3">
+      <label class="form-check-label" for="btnradio1">Show new files</label>
+    </div>
   </div>
   </div>
   <script>
@@ -47,6 +66,7 @@
       };
       x.send();
       //const resp = fetch('/download/' + id, () => {});
+      location.href = '/?flags=' + radiobuttonflags();
     }
   </script>
   <ul class="list-group">
@@ -58,16 +78,48 @@
   </ul>
 
   <script>
-    allfiles.onchange = () => {
-      alert(btnradio1.checked);
-      if (btnradio1.checked) {
+    function radiobuttonflags() {
+      return btnradio1.checked << 2 | btnradio2.checked << 1 | btnradio3.checked
+    }
+
+    allfiles.onchange = () => hideshowfiles(radiobuttonflags());
+      //alert(btnradio1.checked);
+
+    var currentPage;
+    function setupPage(page) {
+      currentPage = page;
+    }
+
+    function hideshowfiles(flags) {
+      // 4 new files (btnradio1)
+      // 2  old (btnradio2)
+      // 1 all (btnradio3)
+
+      history.replaceState(currentPage,"","?flags=" + flags);
+
+      if (flags & 4) {
+        document.getElementById("btnradio1").checked = true;
+
         $('ul > [data-dlinfo="0"]').show();
         $('ul > [data-dlinfo="1"]').hide();
-      } else {
+      } else if (flags & 2) {
+        document.getElementById("btnradio2").checked = true;
+
         $('ul > [data-dlinfo="1"]').show();
         $('ul > [data-dlinfo="0"]').hide();
+      } else {
+        document.getElementById("btnradio3").checked = true;
+
+        $('ul > [data-dlinfo="1"]').show();
+        $('ul > [data-dlinfo="0"]').show();
       }
     }
+
+
+    <%if (flags) { %>
+      hideshowfiles(<%=flags%>);
+    <%} %>
+
   </script>
 
 

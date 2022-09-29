@@ -28,7 +28,7 @@ function home(req, res) {
       showLibrary(req,res);
     }
   } else {
-    res.render('login');
+    res.render('login',{fail: false});
   }
 }
 
@@ -54,19 +54,23 @@ function logout(req, res) {
 async function adduser(req,res) {
   let user = req.body.username;
   let pass = req.body.pass;
+  await adduser1(user, pass);
+  res.redirect('/')
+}
+
+async function adduser1(user, pass) {
   const hash = await g.hashit(pass);
 // upsert to the users collection
-  await g.users.findOneAndUpdate(
+  return g.users.findOneAndUpdate(
       {name: user},
       {$set: {
           hashpass: hash,
-          verified: req.body.verified == "on",
+          verified: true,
           upload: false,
           downloads: []
         }},
-      {upsert: true, returnNewDocument: true}
+      {upsert: true, returnDocument: "after"}
   );
-  res.redirect('/')
 }
 
 function showLibrary(req,res) {
@@ -82,23 +86,26 @@ function upload(req,res) {
   res.render('upload');
 }
 
-function downloadFile(req, res) {
+function downloadFile(req, res, next) {
   const id = req.params.id;
+  let fdoc0;
   g.files.findOneAndUpdate({_id: new ObjectId(id)},
   {$addToSet: {downloads: req.session.user._id}},
-      {returnDocument: "before"}).
-  then(async (fdoc) => {
-    await g.users.findOneAndUpdate(
-        {_id: new ObjectId(req.session.user._id)},
-        {$addToSet: {downloads: id}},
-        {returnDocument: "before"});
-    res.download(fdoc.value.urlpath, fdoc.value.name, (err) => {
-      if (!err) {
-        res.status(200).end();
-      }
-      else res.status(500).end();
-    })
-  });
+      {returnDocument: "before"}, (err, fdoc) => {
+        fdoc0 = fdoc;
+        g.users.findOneAndUpdate(
+            {_id: new ObjectId(req.session.user._id)},
+            {$addToSet: {downloads: id}},
+            {returnDocument: "before"}, (err, retuser) => {
+
+              // res.sendFile(fdoc0.value.urlpath, (err) => {
+              res.download(fdoc0.value.urlpath, fdoc0.value.name, {maxAge: 0, lastModified: 0}, (err) => {
+                if (!err) {
+                  res.status(200).end();
+                } else res.status(500).end();
+              });
+            });
+      });
 }
 
 function uploadFiles(req, res) {
@@ -166,16 +173,32 @@ function uploadFiles(req, res) {
   }
 }
 
-function login(req,res) {
-  let user = req.body.user;
+async function login(req,res) {
+  let user = req.body.username;
   let pass = req.body.pass;
+
+  if (req.body.signin == "signup") {
+    if (req.body.code != g.secretCode) {
+      res.render('login', {fail: "Incorrect signup code"});
+      return;
+    } else {
+        let ret = await adduser1(user, pass);
+        req.session.user = ret.value;
+        res.redirect('/');
+        return;
+    }
+  }
+  if (!user || !pass) {
+    res.render('login', {fail: "email and password must be provided"});
+    return;
+  }
   g.hashit(pass).then((hashpass) => {
     g.users.findOne({name: user, hashpass: hashpass}).then((found) => {
       if (found) {
         req.session.user = found;
         res.redirect('/');
       } else {
-        res.render('login', {fail: true})
+        res.render('login', {fail: "Incorrect email/password"})
       }
     })
   })

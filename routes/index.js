@@ -67,7 +67,6 @@ async function adduser1(user, pass) {
           hashpass: hash,
           verified: true,
           upload: false,
-          downloads: []
         }},
       {upsert: true, returnDocument: "after"}
   );

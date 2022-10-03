@@ -42,12 +42,12 @@
             <div class="mb-3 row border-top border-bottom" id="secretcode" style="display:none">
                 <div class="col-6">
                     <label for="code" class="form-label">Secret sign up code:</label>
-                    <input type="text" id="code" name="code"/>
+                    <input type="password" id="code" name="code"/><i class="bi bi-eye-slash" id="togglePassword2"></i>
                 </div>
             </div>
             <div class="mb-3 row">
                 <div class="col-8">
-                    <p class="text-info">Forgot password? Use <b>Sign up</b> with new password and secret code.</p>
+                    <p class="text-info">Forgot password? Use <b>Sign up</b> with new password and secret code. Downloads will NOT be reset.</p>
                 </div>
             </div>
 
@@ -59,6 +59,14 @@
             // toggle the type attribute
             const type = pass.getAttribute("type") === "password" ? "text" : "password";
             pass.setAttribute("type", type);
+            // toggle the icon
+            this.classList.toggle("bi-eye");
+        });
+
+        togglePassword2.addEventListener("click", function () {
+            // toggle the type attribute
+            const type = code.getAttribute("type") === "password" ? "text" : "password";
+            code.setAttribute("type", type);
             // toggle the icon
             this.classList.toggle("bi-eye");
         });

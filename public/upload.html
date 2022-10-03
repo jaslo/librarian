@@ -9,8 +9,8 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <!-- bootstrap javascript reuqires jquery -->
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js" integrity="sha512-aVKKRRi/Q/YV+4mjoKBsE4x3H+BkegoM/em46NNlCqNTmUYADjBbeNefNxYV7giUp0VxICtqdrbqU7iVaeZNXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js" integrity="sha512-aVKKRRi/Q/YV+4mjoKBsE4x3H+BkegoM/em46NNlCqNTmUYADjBbeNefNxYV7giUp0VxICtqdrbqU7iVaeZNXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 </head>
 <body>
@@ -20,9 +20,28 @@
     <button id="logout" name="logout" onclick="window.location.href = '/logout';">Sign out</button>
 </div>
 <form method="POST" action="/upload" enctype="multipart/form-data" id="mainform">
-    <div class="mb-3">
-        <label for="formFile" class="form-label fw-bold">Select files to add to library:</label>
-        <input class="form-control" type="file" name="formFiles" id="formFiles" multiple>
+    <div class="container" id="filesnames">
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="uploads" id="upload" value="files" checked>
+            <label class="form-check-label" for="upload">Upload files</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="uploads" id="names" value="names">
+            <label class="form-check-label" for="names">Entries without files</label>
+        </div>
+    </div>
+
+    <div class="container" id="uploader" style="display:block">
+        <div class="mb-3">
+            <label for="formFile" class="form-label fw-bold">Select files to add to library:</label>
+            <input class="form-control" type="file" name="formFiles" id="formFiles" multiple>
+        </div>
+    </div>
+    <div class="container" id="nameentry" style="display:none">
+        <div class="row border-top border-bottom">
+            <div class="col-1 fw-bold">Number</div>
+            <div class="col-4 fw-bold">Document Name</div>
+        </div>
     </div>
 </form>
 <script>
@@ -43,30 +62,56 @@
       `;
     }
 
-    function initCap(name) {
-        let words = name.split(' ');
-        let wnew = [];
-        for (var i = 0; i < words.length; i++) {
-            words[i] = words[i].charAt(0).toUpperCase() + words[i].slice(1);
-        }
-        return words.join(' ');
+    function docentry(n) {
+        return `
+        <div class="row">
+            <div class="col-1">
+                <input type="text" class="form-control" name="number${n}" id="number${n}">
+            </div>
+            <div class="col-4">
+                <input type="text" class="form-control" name="name${n}" id="name${n}">
+            </div>
+        </div>
+      `;
     }
+
+    $(document).ready(function () {
+        for (var i = 1; i <= 10; i++) {
+            nameentry.insertAdjacentHTML('beforeend', docentry(i));
+        }
+        nameentry.insertAdjacentHTML('beforeend',`<input type="submit">`);
+    });
+
+    filesnames.onchange = () => {
+        //alert(upload.checked);
+        if (upload.checked) {
+            nameentry.style.display = "none";
+            uploader.style.display = "block";
+        }
+        else {
+            nameentry.style.display = "block";
+            uploader.style.display = "none";
+        }
+    };
+
+
+    const uppercaseWords = (str) => str.replace(/^(.)|\s+(.)/g, (c) => c.toUpperCase());
 
     mainform = document.getElementById("mainform");
     formElement = document.getElementById("formFiles");
     formElement.addEventListener("input", (event) => {
         for (var i = 1; i <= formElement.files.length; i++) {
             var f = formElement.files[i-1];
-            mainform.insertAdjacentHTML('beforeend', filedetails(i));
+            uploader.insertAdjacentHTML('beforeend', filedetails(i));
             document.getElementById(`filename${i}`).value = f.name;
             var fname1 = f.name.replaceAll('-',' ');
-            var result = fname1.match(/([^0-9]*)([0-9]*)\.(.*)/);
-            let fnameShow = initCap(result[1].trim());
+            var result = fname1.match(/([^0-9]*)([0-9]*)(.*)\.(.*)/);
+            let fnameShow = uppercaseWords(result[1].trim());
 
             document.getElementById(`docname${i}`).value = fnameShow;
             document.getElementById(`filenumber${i}`).value = result[2].trim();
         }
-        mainform.insertAdjacentHTML('beforeend',`<input type="submit">`);
+        uploader.insertAdjacentHTML('beforeend',`<input type="submit">`);
     })
 </script>
 </body>

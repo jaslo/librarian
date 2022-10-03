@@ -6,6 +6,7 @@
 <head>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css" />
     <!-- bootstrap javascript reuqires jquery -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js" integrity="sha512-aVKKRRi/Q/YV+4mjoKBsE4x3H+BkegoM/em46NNlCqNTmUYADjBbeNefNxYV7giUp0VxICtqdrbqU7iVaeZNXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
@@ -27,27 +28,21 @@
         </div>
         <div class="container">
             <div class="mb-3 row border-top border-bottom">
-                <div class="col-3">
+                <div class="col-6">
                 <label for="useremail" class="form-label">Email address:</label>
-                </div>
-                <div class="col-4">
-                <input type="text" class="form-control" id="useremail" name="username">
+                <input type="text" id="useremail" name="username">
                 </div>
             </div>
-            <div class="mb-3 row border-top border-bottom">
-                <div class="col-3">
-                <label for="pass" class="form-label">Password:</label>
-                </div>
-                <div class="col-3">
-                <input type="password" class="form-control" id="pass" name="pass">
+            <div class="mb-3 row">
+                <div class="col-6">
+                <label for="pass" >Password:</label>
+                <input type="password" id="pass" name="pass"/><i class="bi bi-eye-slash" id="togglePassword1"></i>
                 </div>
             </div>
             <div class="mb-3 row border-top border-bottom" id="secretcode" style="display:none">
-                <div class="col-3">
+                <div class="col-6">
                     <label for="code" class="form-label">Secret sign up code:</label>
-                </div>
-                <div class="col-3">
-                    <input type="text" class="form-control" id="code" name="code">
+                    <input type="text" id="code" name="code"/>
                 </div>
             </div>
             <div class="mb-3 row">
@@ -60,6 +55,14 @@
         </div>
     </form>
     <script>
+        togglePassword1.addEventListener("click", function () {
+            // toggle the type attribute
+            const type = pass.getAttribute("type") === "password" ? "text" : "password";
+            pass.setAttribute("type", type);
+            // toggle the icon
+            this.classList.toggle("bi-eye");
+        });
+
         sign.onchange = () => {
             if (signin.checked) {
                 secretcode.style.display = "none";

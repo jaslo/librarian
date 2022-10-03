@@ -108,37 +108,83 @@ function downloadFile(req, res, next) {
       });
 }
 
-function uploadFiles(req, res) {
-  if (req.files && req.files.formFiles) {
-    if (!Array.isArray(req.files.formFiles)) {
-      req.files.formFiles = [req.files.formFiles];
-    }
+async function addEntry(req, res) {
+  await g.files.findOneAndUpdate(
+      {docname: req.body.docname},
+      {
+        $set: {
+          name: req.body.docname,
+          filenumber: req.body.filenumber,
+          docname: req.body.docname,
+          downloads: []
+        }
+      },
+      {upsert: true, returnNewDocument: true}
+  );
+  res.redirect('/');
+}
 
-    let filemap = {};
+async function addNames(req, res) {
+  const fdoc = 'name';
+  const fnum = 'number';
 
-    let count = 1;
-    for (count = 1; ; count++) {
-      let filename = req.body['filename' + count];
-      if (!filename) break;
-      let filenumber = req.body['filenumber' + count];
-      let docname = req.body['docname' + count];
-      filemap[filename] = {
-        filenumber: filenumber,
-        docname: docname
-      };
-    }
+  let count = 1;
+  for (count = 1; ; count++) {
+    let docname = req.body[fdoc + count];
+    if (!docname) break;
+    let filenumber = req.body[fnum + count];
+    await g.files.findOneAndUpdate(
+        {docname: docname},
+        {
+          $set: {
+            filenumber: filenumber,
+            docname: docname,
+            downloads: []
+          }
+        },
+        {upsert: true, returnNewDocument: true}
+    );
+  }
+}
 
-    let updated = 0;
+async function uploadFiles(req, res) {
+  if (req.body.uploads == "names") {
+    await addNames(req,res);
+    res.redirect('/');
+    return;
+  }
 
-    req.files.formFiles.forEach(async (ff) => {
+  if (!Array.isArray(req.files.formFiles)) {
+    req.files.formFiles = [req.files.formFiles];
+  }
+
+  const fdoc = "docname";
+  const fnum = "filenumber";
+
+  let filemap = {};
+
+  let count = 1;
+  for (count = 1; ; count++) {
+    let docname = req.body[fdoc + count];
+    if (!docname) break;
+    let filename = req.body['filename' + count] || docname;
+    let filenumber = req.body[fnum + count];
+    filemap[filename] = {
+      filenumber: filenumber,
+      docname: docname
+    };
+  }
+  let updated = 0;
+  if (req.files.formfiles) {
+    for (const ff of req.files.formFiles) {
       try {
         let orig = ff.file;
         let newpath = g.publicDir + 'files/' + ff.filename;
         await new Promise((resolve, reject) => {
-            fs.rename(orig, newpath, (data, err) => {
-              if (!err) resolve(data);
-              else throw(err);
-            });
+          fs.rename(orig, newpath, (data, err) => {
+            if (!err) resolve(data);
+            else throw(err);
+          });
         });
         let webpath = g.publicDir + 'files/' + ff.filename;
         console.log('dlpath = ' + webpath);
@@ -146,7 +192,7 @@ function uploadFiles(req, res) {
         let fmeta = filemap[ff.filename];
         if (!fmeta) throw "missing metadata";
         await g.files.findOneAndUpdate(
-            {urlpath: webpath},
+            {docname: fmeta.docname},
             {
               $set: {
                 name: ff.filename,
@@ -159,17 +205,13 @@ function uploadFiles(req, res) {
             {upsert: true, returnNewDocument: true}
         );
         updated++;
-        if (updated == count-1) {
+        if (updated == count - 1) {
           res.redirect('/');
         }
-      }
-      catch(e) {
+      } catch (e) {
         console.log('error ' + e + ' processing file');
       }
-    });
-  }
-  else {
-    showLibrary(req,res);
+    }
   }
 }
 

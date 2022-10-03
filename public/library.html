@@ -53,13 +53,22 @@
       window.location = '/download/' + id;
     }
   </script>
+<div class="container">
   <ul class="list-group">
-    <% files.forEach((f) => { %>
-    <li class="list-group-item" data-dlinfo="<%=f.downloads ? f.downloads.length : 0%>" onclick="downloader('<%=f.idstr%>','<%=f.name%>')">
-      <%=f.filenumber%> <a href="#"><%= f.docname%></a>
+    <% files.forEach((f) => {
+      if (f.name) { %>
+    <li class="list-group-item border-0" data-dlinfo="<%=f.downloads ? 1 : 0%>" onclick="downloader('<%=f.idstr%>','<%=f.name%>')">
+      <%=f.filenumber%>
+      <a href="#"><%= f.docname%></a>
+      <% } else { %>
+    <li class="list-group-item border-0" data-dlinfo="x" onclick="downloader('<%=f.idstr%>','<%=f.name%>')">
+      <%=f.filenumber%>
+        <%= f.docname%>
+      <% } %>
     </li>
     <% }) %>
   </ul>
+</div>
 
   <script>
     function radiobuttonflags() {
@@ -81,19 +90,22 @@
 
       history.replaceState(currentPage,"","?flags=" + flags);
 
-      if (flags & 4) {
+      if (flags & 4) { // undownloaded files
         document.getElementById("btnradio1").checked = true;
 
         $('ul > [data-dlinfo="0"]').show();
+        $('ul > [data-dlinfo="x"]').hide();
         $('ul > [data-dlinfo="1"]').hide();
-      } else if (flags & 2) {
+      } else if (flags & 2) { // downloaded
         document.getElementById("btnradio2").checked = true;
 
         $('ul > [data-dlinfo="1"]').show();
+        $('ul > [data-dlinfo="x"]').hide();
         $('ul > [data-dlinfo="0"]').hide();
       } else {
         document.getElementById("btnradio3").checked = true;
 
+        $('ul > [data-dlinfo="x"]').show();
         $('ul > [data-dlinfo="1"]').show();
         $('ul > [data-dlinfo="0"]').show();
       }

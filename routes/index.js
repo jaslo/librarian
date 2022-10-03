@@ -4,6 +4,8 @@ import path from 'path';
 import fs from 'fs';
 import util from 'util';
 import {ObjectID as ObjectId} from 'mongodb';
+import nodemailer from 'nodemailer';
+import aws from '@aws-sdk/client-ses';
 
 const router = g.router;
 
@@ -16,6 +18,16 @@ export function setRoutes(router) {
   router.post('/upload', uploadFiles);
   router.post('/login', login);
 }
+
+process.env.AWS_ACCESS_KEY_ID = g.awsaccess;
+process.env.AWS_SECRET_ACCESS_KEY = g.awssecret;
+const ses = new aws.SES({
+  apiVersion: "2010-12-01",
+  region: "us-east-1",
+});
+let transporter = nodemailer.createTransport({
+  SES: { ses, aws },
+});
 
 /* GET home page. */
 function home(req, res) {
@@ -54,20 +66,25 @@ function logout(req, res) {
 async function adduser(req,res) {
   let user = req.body.username;
   let pass = req.body.pass;
-  await adduser1(user, pass);
+  await adduser1(user, pass, req.body.verified, true);
   res.redirect('/')
 }
 
-async function adduser1(user, pass) {
+async function adduser1(user, pass, verified, reset) {
   const hash = await g.hashit(pass);
 // upsert to the users collection
+  let update = {$set: {
+    hashpass: hash,
+    verified: verified,
+    upload: false,
+  }};
+
+  if (reset) {
+    update.$set.downloads = [];
+  }
   return g.users.findOneAndUpdate(
       {name: user},
-      {$set: {
-          hashpass: hash,
-          verified: true,
-          upload: false,
-        }},
+      update,
       {upsert: true, returnDocument: "after"}
   );
 }
@@ -223,7 +240,25 @@ async function login(req,res) {
       res.render('login', {fail: "Incorrect signup code"});
       return;
     } else {
-        let ret = await adduser1(user, pass);
+      let ret = await adduser1(user, pass, false, req.body.reset);
+      // use email loop?
+      transporter.sendMail({
+        from: 'librarian@librarian.com',
+        to: req.body.username,
+        subject: 'Complete your sign up',
+        html: `Hello,<br/>
+          Someone using this email has just signed up for "librarian". 
+          <br/>
+          If that was your intention, please use 
+          <a href="${req.headers.origin}/verify/${ret.value._id.toString()}">this link</a> 
+          to complete your sign up.<br/>
+          Otherwise, ignore this message!
+          `
+      });
+
+
+
+
         req.session.user = ret.value;
         res.redirect('/');
         return;

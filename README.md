@@ -6,8 +6,6 @@ also allows for "library" entries with no file associate, just document name (an
 
 configure in "globals.js" like this
 
-import bcrypt from "bcrypt";
-
 const g = {
 
     dbName: 'topshelf',
@@ -15,7 +13,6 @@ const g = {
     // for admin user
     defname: 'admin',
     defpass: 'xxxx',
-    salt: '$2b$10$QJ4S.Lck.xxxxxxxxxxxx', // must use a constant for mongodb find
     // for uploader user
     uploaderName: 'uploader',
     uploadPass: 'xxxxx',
@@ -24,10 +21,6 @@ const g = {
     // for SES email loop
     awsaccess: "xxxx",
     awssecret: "xxxxx",
-    async hashit(pass) {
-        const hash = await bcrypt.hash(pass, g.salt);
-        return hash;
-    }
 };
 
 export default g;

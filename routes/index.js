@@ -6,6 +6,7 @@ import util from 'util';
 import {ObjectID as ObjectId} from 'mongodb';
 import nodemailer from 'nodemailer';
 import aws from '@aws-sdk/client-ses';
+import bcrypt from "bcrypt";
 
 const router = g.router;
 
@@ -71,8 +72,8 @@ async function adduser(req,res) {
 }
 
 async function adduser1(user, pass, verified, reset) {
-  const hash = await g.hashit(pass);
-// upsert to the users collection
+  const hash = await bcrypt.hash(pass, 10);
+  // upsert to the users collection
   let update = {$set: {
     hashpass: hash,
     verified: verified,
@@ -82,11 +83,17 @@ async function adduser1(user, pass, verified, reset) {
   if (reset) {
     update.$set.downloads = [];
   }
-  return g.users.findOneAndUpdate(
+  let userRecord = await g.users.findOneAndUpdate(
       {name: user},
       update,
       {upsert: true, returnDocument: "after"}
   );
+  if (reset) {
+    await g.files.updateMany({downloads: {$elemMatch: {$eq: req.session.user._id}}},
+        {$pull: {downloads: {$eq: userRecord._id}}}
+    );
+  }
+  return userRecord;
 }
 
 function showLibrary(req,res) {
@@ -115,7 +122,7 @@ function downloadFile(req, res, next) {
             {returnDocument: "before"}, (err, retuser) => {
 
               // res.sendFile(fdoc0.value.urlpath, (err) => {
-              res.download(fdoc0.value.urlpath, fdoc0.value.name, {maxAge: 0, lastModified: 0}, (err) => {
+              res.download(g.fileStorageDir + fdoc0.value.urlpath, fdoc0.value.name, {maxAge: 0, lastModified: 0}, (err) => {
                 if (!err) {
                   res.status(200).end();
                 } else res.status(500).end();
@@ -195,14 +202,14 @@ async function uploadFiles(req, res) {
     for (const ff of req.files.formFiles) {
       try {
         let orig = ff.file;
-        let newpath = g.publicDir + 'files/' + ff.filename;
+        let newpath = g.fileStorageDir + ff.filename;
         await new Promise((resolve, reject) => {
           fs.rename(orig, newpath, (data, err) => {
             if (!err) resolve(data);
             else throw(err);
           });
         });
-        let webpath = g.publicDir + 'files/' + ff.filename;
+        let webpath = g.fileStorageDir + ff.filename;
         console.log('dlpath = ' + webpath);
         // find the corresponding fields in req.body
         let fmeta = filemap[ff.filename];
@@ -214,7 +221,7 @@ async function uploadFiles(req, res) {
                 name: ff.filename,
                 filenumber: fmeta.filenumber,
                 docname: fmeta.docname || ff.filename,
-                urlpath: webpath,
+                urlpath: ff.filename,
                 downloads: []
               }
             },
@@ -240,10 +247,11 @@ async function login(req,res) {
       res.render('login', {fail: "Incorrect signup code"});
       return;
     } else {
-      let ret = await adduser1(user, pass, false, req.body.reset);
+      let ret = await adduser1(user, pass, true, req.body.reset);
       // use email loop?
+      /*
       transporter.sendMail({
-        from: 'librarian@librarian.com',
+        from: 'librarian@vtable.com',
         to: req.body.username,
         subject: 'Complete your sign up',
         html: `Hello,<br/>
@@ -255,27 +263,27 @@ async function login(req,res) {
           Otherwise, ignore this message!
           `
       });
-
-
-
-
-        req.session.user = ret.value;
-        res.redirect('/');
-        return;
+      */
+      req.session.user = ret.value;
+      res.redirect('/');
+      return;
     }
   }
   if (!user || !pass) {
     res.render('login', {fail: "email and password must be provided"});
     return;
   }
-  g.hashit(pass).then((hashpass) => {
-    g.users.findOne({name: user, hashpass: hashpass}).then((found) => {
-      if (found) {
-        req.session.user = found;
-        res.redirect('/');
-      } else {
-        res.render('login', {fail: "Incorrect email/password"})
-      }
-    })
+  let found;
+  g.users.findOne({name: user}).then((found0) => {
+    found = found0;
+    if (!found) throw new Error("could not find user")
+    if (!found.verified) throw new Error("user has not been verified");
+    return bcrypt.compare(pass, found.hashpass);
+  }).then((result) => {
+    req.session.user = found;
+    res.redirect('/');
   })
+  .catch((e) => {
+    res.render('login', {fail: e});
+  });
 }

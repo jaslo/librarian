@@ -18,12 +18,17 @@ import {setRoutes} from './routes/index.js';
 setRoutes(g.router);
 
 import {renderFile as ejsRender} from 'ejs';
+import bcrypt from "bcrypt";
 
 var app = express();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-g.publicDir = path.join(__dirname, 'public/');
+if (process.platform == 'linux') {
+    g.fileStorageDir = '/var/librarian/files';
+} else {
+    g.fileStorageDir = path.join(__dirname, 'public/files/');
+}
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -63,8 +68,7 @@ async function main() {
     const db = mongodb.db(g.dbName);
     g.users = db.collection('users');
     g.files = db.collection('files');
-    // g.salt = await bcrypt.genSalt(10);
-    const hash = await g.hashit(g.defpass);
+    const hash = await bcrypt.hash(g.defpass, 10);
 // upsert to the users collection
     await g.users.findOneAndUpdate(
         {name: g.defname},
@@ -76,7 +80,7 @@ async function main() {
             }},
         {upsert: true, returnNewDocument: true}
     );
-    const uppass = await g.hashit(g.uploadPass);
+    const uppass = await bcrypt.hash(g.uploadPass, 10);
     await g.users.findOneAndUpdate(
         {name: g.uploaderName},
         {$set: {

@@ -1,3 +1,4 @@
+#!/usr/bin/node
 import express from 'express';
 import path from 'path';
 import cookieParser from 'cookie-parser';
@@ -25,14 +26,14 @@ var app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 if (process.platform == 'linux') {
-    g.fileStorageDir = '/var/librarian/files';
+    g.fileStorageDir = '/var/librarian/files/';
 } else {
-    g.fileStorageDir = path.join(__dirname, 'public/files/');
+    g.fileStorageDir = 'i:/downloads/topshelf/'; // path.join(__dirname, 'public/files/');
 }
 
 app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({limit:"200mb", extended:true}));
+app.use(express.urlencoded({limit:"200mb", extended: true,parameterLimit: 100000 }));
 // app.use(busboy());
 bb.extend(app, {
     upload: true,

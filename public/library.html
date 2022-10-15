@@ -49,19 +49,21 @@
   </div>
   </div>
   <script>
-    function downloader(id, fname) {
+    function downloader(item, id, fname) {
       window.location = '/download/' + id;
+      item.dataset.dlinfo = "1";
+      hideshowfiles(radiobuttonflags());
     }
   </script>
 <div class="container">
   <ul class="list-group">
     <% files.forEach((f) => {
       if (f.name) { %>
-    <li class="list-group-item border-0" data-dlinfo="<%=f.downloads ? 1 : 0%>" onclick="downloader('<%=f.idstr%>','<%=f.name%>')">
+    <li class="list-group-item border-0" data-dlinfo="<%=f.downloads ? 1 : 0%>" onclick="downloader(this,'<%=f.idstr%>','<%=f.name%>')">
       <%=f.filenumber%>
       <a href="#"><%= f.docname%></a>
       <% } else { %>
-    <li class="list-group-item border-0" data-dlinfo="x" onclick="downloader('<%=f.idstr%>','<%=f.name%>')">
+    <li class="list-group-item border-0" data-dlinfo="x" onclick="downloader(this,'<%=f.idstr%>','<%=f.name%>')">
       <%=f.filenumber%>
         <%= f.docname%>
       <% } %>

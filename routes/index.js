@@ -18,6 +18,7 @@ export function setRoutes(router) {
   router.get('/download/:id', downloadFile);
   router.post('/upload', uploadFiles);
   router.post('/login', login);
+  router.get('/verify/:id', verify);
 }
 
 process.env.AWS_ACCESS_KEY_ID = g.awsaccess;
@@ -67,7 +68,7 @@ function logout(req, res) {
 async function adduser(req,res) {
   let user = req.body.username;
   let pass = req.body.pass;
-  await adduser1(user, pass, req.body.verified, true);
+  await adduser1(user, pass, req.body.verified == "on", true);
   res.redirect('/')
 }
 
@@ -109,6 +110,14 @@ function upload(req,res) {
   res.render('upload');
 }
 
+function verify(req, res) {
+  const id = req.params.id;
+  g.users.findOneAndUpdate({_id: new ObjectId(id)},
+      {$set: {verified: true}}).then(() => {
+        res.redirect('/');
+  });
+}
+
 function downloadFile(req, res, next) {
   const id = req.params.id;
   let fdoc0;
@@ -137,7 +146,7 @@ async function addEntry(req, res) {
       {
         $set: {
           name: req.body.docname,
-          filenumber: req.body.filenumber,
+          filenumber: parseInt(req.body.filenumber),
           docname: req.body.docname,
           downloads: []
         }
@@ -160,7 +169,7 @@ async function addNames(req, res) {
         {docname: docname},
         {
           $set: {
-            filenumber: filenumber,
+            filenumber: parseInt(filenumber),
             docname: docname,
             downloads: []
           }
@@ -193,12 +202,12 @@ async function uploadFiles(req, res) {
     let filename = req.body['filename' + count] || docname;
     let filenumber = req.body[fnum + count];
     filemap[filename] = {
-      filenumber: filenumber,
+      filenumber: parseInt(filenumber),
       docname: docname
     };
   }
   let updated = 0;
-  if (req.files.formfiles) {
+  if (req.files.formFiles) {
     for (const ff of req.files.formFiles) {
       try {
         let orig = ff.file;
@@ -247,9 +256,9 @@ async function login(req,res) {
       res.render('login', {fail: "Incorrect signup code"});
       return;
     } else {
-      let ret = await adduser1(user, pass, true, req.body.reset);
+      let ret = await adduser1(user, pass, false, req.body.reset == "on");
       // use email loop?
-      /*
+
       transporter.sendMail({
         from: 'librarian@vtable.com',
         to: req.body.username,
@@ -263,7 +272,7 @@ async function login(req,res) {
           Otherwise, ignore this message!
           `
       });
-      */
+
       req.session.user = ret.value;
       res.redirect('/');
       return;

@@ -104,7 +104,7 @@
             var f = formElement.files[i-1];
             uploader.insertAdjacentHTML('beforeend', filedetails(i));
             document.getElementById(`filename${i}`).value = f.name;
-            var fname1 = f.name.replaceAll('-',' ');
+            var fname1 = f.name.replaceAll('-',' ').replaceAll('_',' ');
             var result = fname1.match(/([^0-9]*)([0-9]*)(.*)\.(.*)/);
             let fnameShow = uppercaseWords(result[1].trim());
 

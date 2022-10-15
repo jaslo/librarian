@@ -28,22 +28,28 @@
         </div>
         <div class="container">
             <div class="mb-3 row border-top border-bottom">
-                <div class="col-6">
-                <label for="useremail" class="form-label">Email address:</label>
-                <input type="text" id="useremail" name="username">
+                <div class="col-2">
+                    <label for="useremail" class="form-label">Email address:</label>
+                </div>
+                <div class="col-3">
+                    <input type="text" id="useremail" name="username">
                 </div>
             </div>
             <div class="mb-3 row">
-                <div class="col-6">
-                <label for="pass" >Password:</label>
-                    <input type="password" id="pass" name="pass"><i class="bi bi-eye-slash" id="togglePassword1"></i></input>
+                <div class="col-2">
+                    <label for="pass" >Password:</label>
+                </div>
+                <div class="col-3">
+                    <input type="password" id="pass" name="pass"><i class="bi bi-eye-slash" style="position:relative;left:-30px" id="togglePassword1"></i></input>
                 </div>
             </div>
-            <div class="container" id="secretcode" style="display:none">
-                <div class="row border-top border-bottom">
-                    <div class="col-6">
-                        <label for="code">Secret sign up code:</label>
-                        <input type="password" id="code" name="code"><i class="bi bi-eye-slash" id="togglePassword2"></i></input>
+            <div id="secretcode" style="display:none">
+                <div class="mb-3 row border-top border-bottom">
+                    <div class="col-2">
+                        <label style="font-size: 0.95rem" for="code">Secret signup code:</label>
+                    </div>
+                    <div class="col-3">
+                        <input type="password" id="code" name="code"><i class="bi bi-eye-slash" style="position:relative;left:-30px" id="togglePassword2"></i></input>
                     </div>
                 </div>
                 <div class="row border-top border-bottom">
@@ -85,7 +91,7 @@
                 submitbutton.value = "Log in";
             }
             else {
-                secretcode.style.display = "flex";
+                secretcode.style.display = "block";
                 submitbutton.value = "Sign up";
             }
         };

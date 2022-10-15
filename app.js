@@ -20,6 +20,8 @@ setRoutes(g.router);
 
 import {renderFile as ejsRender} from 'ejs';
 import bcrypt from "bcrypt";
+import aws from "@aws-sdk/client-ses";
+import nodemailer from "nodemailer";
 
 var app = express();
 
@@ -30,6 +32,17 @@ if (process.platform == 'linux') {
 } else {
     g.fileStorageDir = 'i:/downloads/topshelf/'; // path.join(__dirname, 'public/files/');
 }
+
+process.env.AWS_ACCESS_KEY_ID = g.awsaccess;
+process.env.AWS_SECRET_ACCESS_KEY = g.awssecret;
+const ses = new aws.SES({
+    apiVersion: "2010-12-01",
+    region: "us-east-1",
+});
+
+g.transporter = nodemailer.createTransport({
+    SES: { ses, aws },
+});
 
 app.use(logger('dev'));
 app.use(express.json({limit:"200mb", extended:true}));

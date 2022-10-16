@@ -2,26 +2,70 @@ import g from "../globals.js";
 import {ObjectID as ObjectId} from "mongodb";
 import fs from "fs";
 
-export function downloadFile(req, res, next) {
-    const id = req.params.id;
-    let fdoc0;
-    g.files.findOneAndUpdate({_id: new ObjectId(id)},
-        {$addToSet: {downloads: req.session.user._id}},
-        {returnDocument: "before"}, (err, fdoc) => {
-            fdoc0 = fdoc;
-            g.users.findOneAndUpdate(
-                {_id: new ObjectId(req.session.user._id)},
-                {$addToSet: {downloads: id}},
-                {returnDocument: "before"}, (err, retuser) => {
 
-                    // res.sendFile(fdoc0.value.urlpath, (err) => {
-                    res.download(g.fileStorageDir + fdoc0.value.urlpath, fdoc0.value.name, {maxAge: 0, lastModified: 0}, (err) => {
-                        if (!err) {
-                            res.status(200).end();
-                        } else res.status(500).end();
-                    });
-                });
-        });
+export function toggleFile(req, res, next) {
+    const id = req.params.id; // file id
+
+    g.files.find({_id: new ObjectId(id)}, {
+        projection: {_id: 0, idstr: {$toString:"$_id"}, name: 1, filenumber: 1, docname: 1, downloads: {$elemMatch: { $eq: req.session.user._id}}},
+        sort: {filenumber: 1, docname: 1}
+    }).toArray().then(async (finds) => {
+        if (finds[0].downloads) { // was downloaded, setting to not downloaded
+            await resetDownloaded(req, id);
+        } else {
+            await setDownloaded(req, id);
+        }
+        res.status(200).end();
+    });
+}
+
+async function resetDownloaded(req, fileid) {
+   await g.files.findOneAndUpdate({_id: new ObjectId(fileid)},
+        {$pull: {downloads: {$eq: req.session.user._id}}});
+   await g.users.findOneAndUpdate(
+        {_id: new ObjectId(req.session.user._id)},
+        {$pull: {downloads: fileid}});
+}
+
+async function setDownloaded(req, fileid) {
+    let fdoc0;
+    fdoc0 = await g.files.findOneAndUpdate({_id: new ObjectId(fileid)},
+        {$addToSet: {downloads: req.session.user._id}},
+        {returnDocument: "before"});
+    if (fdoc0.value) {
+        await g.users.findOneAndUpdate(
+            {_id: new ObjectId(req.session.user._id)},
+            {$addToSet: {downloads: fileid}},
+            {returnDocument: "before"});
+        return fdoc0;
+    }
+    return null;
+}
+
+export async function downloadFile(req, res, next = console.error) {
+    try {
+        const id = req.params.id;
+        console.log("downloadfile " + id);
+        let fdoc0 = await setDownloaded(req, id);
+        console.log("downloadfile " + fdoc0.value.name);
+        // res.sendFile(fdoc0.value.urlpath, (err) => {
+        if (fdoc0) {
+            res.download(g.fileStorageDir + fdoc0.value.urlpath, fdoc0.value.name, {
+                maxAge: 0,
+                lastModified: 0
+            }, (err) => {
+                if (!err) {
+                    res.status(200).end();
+                } else {
+                    //res.status(200).send("Error: The file is not on the server");
+                }
+            });
+        } else {
+            res.status(200).send("Error: File ID not found");
+        }
+    } catch (error) {
+        console.log("downloadfile catch: " + error);
+    }
 }
 
 async function addEntry(req, res) {

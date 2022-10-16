@@ -1,0 +1,18 @@
+users:
+    {
+        name:,
+        hashpass:,
+        verified:,
+    // upload - allow access to uploads, library list editor
+        upload:,
+        downloads: []
+    }
+
+file:
+    {
+        name:
+        filenumber:
+        docname:
+        urlpath:
+        downloads: []
+    }

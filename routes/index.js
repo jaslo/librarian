@@ -1,5 +1,5 @@
 import g from '../globals.js';
-import {uploadFiles, downloadFile } from './filehandler.js';
+import {uploadFiles, downloadFile, toggleFile } from './filehandler.js';
 import {login, logout, adduser, verify} from './users.js';
 
 export function setRoutes(router) {
@@ -11,6 +11,7 @@ export function setRoutes(router) {
   router.post('/upload', uploadFiles);
   router.post('/login', login);
   router.get('/verify/:id', verify);
+  router.get('/toggle/:id', toggleFile);
 }
 
 /* GET home page. */

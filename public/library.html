@@ -12,6 +12,39 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js" integrity="sha512-aVKKRRi/Q/YV+4mjoKBsE4x3H+BkegoM/em46NNlCqNTmUYADjBbeNefNxYV7giUp0VxICtqdrbqU7iVaeZNXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+  <link rel="stylesheet" id="unos-googlefont-css" href="https://fonts.googleapis.com/css?family=Open%20Sans%3A300%2C400%2C400i%2C500%2C600%2C700%2C700i%2C800%7CLora%3A400%2C400i%2C700%2C700i&amp;subset=latin" media="all">
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Open+Sans">
+
+  <style>
+    body {
+      font-size: 15px;
+      line-height: 1.733333333em;
+      font-family: "Open Sans", sans-serif;
+      font-weight: normal;
+      color: #666666;
+    }
+    .list-group-item {
+      padding: 0 0;
+      display: list-item;
+      list-style-type: disc;
+    }
+    ul {
+      list-style-position: outside;
+      list-style-image: initial;
+      list-style-type: disc;
+    }
+    ul li::marker {
+      color: black;
+      font-size: 1rem;
+    }
+    a, a i {
+      color: #000000;
+      text-decoration: underline;
+      background-color: transparent;
+    }
+  </style>
 </head>
 <body>
 <p class="display-4 text-center">Librarian: Files</p>
@@ -22,50 +55,78 @@
 
   <div class="container">
   <div class="btn-group" role="group" id="allfiles" aria-label="Select">
-    <!--
-
-<input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off">
-<label class="btn btn-outline-primary" for="btnradio3">Show all files</label>
-
-<input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off">
-<label class="btn btn-outline-primary" for="btnradio2">Show old (downloaded) files</label>
-
-<input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off">
-<label class="btn btn-outline-primary" for="btnradio1">Show new files</label>
--->
-
     <div class="form-check form-check-inline">
-      <input class="form-check-input" type="radio" name="inlineRadioOptions" id="btnradio3" value="option1">
+      <input class="form-check-input" type="radio" name="inlineRadioOptions" id="btnradio3" value="3">
       <label class="form-check-label" for="btnradio3">Show all files</label>
     </div>
     <div class="form-check form-check-inline">
-      <input class="form-check-input" type="radio" name="inlineRadioOptions" id="btnradio2" value="option2">
+      <input class="form-check-input" type="radio" name="inlineRadioOptions" id="btnradio2" value="2">
       <label class="form-check-label" for="btnradio2">Show old (downloaded) files</label>
     </div>
     <div class="form-check form-check-inline">
-      <input class="form-check-input" type="radio" name="inlineRadioOptions" id="btnradio1" value="option3">
+      <input class="form-check-input" type="radio" name="inlineRadioOptions" id="btnradio1" value="1">
       <label class="form-check-label" for="btnradio1">Show new files</label>
+    </div>
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="radio" name="inlineRadioOptions" id="btnradio4" value="4">
+      <label class="form-check-label" for="btnradio4">Reset files</label>
     </div>
   </div>
   </div>
   <script>
     function downloader(item, id, fname) {
-      window.location = '/download/' + id;
-      item.dataset.dlinfo = "1";
+      event.preventDefault();
+      event.stopPropagation();
+      if (btnradio4.checked) {
+        toggledownload(item,id,fname);
+      } else {
+        console.log('download ' + fname);
+        var dlurl = '/download/' + id;
+
+        var a = $("<a>")
+                .attr("href", dlurl)
+                .attr("download", fname)
+                .appendTo("body");
+        a[0].click();
+        a.remove();
+        // window.href = dlurl;
+
+        var li = item.closest('li');
+        li.dataset.dlinfo = "1";
+        li.getElementsByTagName("input")[0].checked = true;
+
+        //item.dataset.dlinfo = "1";
+        hideshowfiles(radiobuttonflags());
+      }
+      return true;
+    }
+
+    function toggledownload(item, id, fname) {
+      $.get('/toggle/' + id, function(data, status) {
+      });
+      var li = item.closest('li');
+      li.dataset.dlinfo = 1 - li.dataset.dlinfo;
+      li.getElementsByTagName("input")[0].checked = (li.dataset.dlinfo == "1");
       hideshowfiles(radiobuttonflags());
+      return true;
     }
   </script>
 <div class="container">
   <ul class="list-group">
     <% files.forEach((f) => {
       if (f.name) { %>
-    <li class="list-group-item border-0" data-dlinfo="<%=f.downloads ? 1 : 0%>" onclick="downloader(this,'<%=f.idstr%>','<%=f.name%>')">
+    <li class="list-group-item border-0" data-dlinfo="<%=f.downloads ? 1 : 0%>">
+      <input type="checkbox" onclick="toggledownload(this, '<%=f.idstr%>', '<%=f.name%>')" style="display:none"
+        <% if (f.downloads) { %>
+        checked
+      <% } %>
+      />
       <%=f.filenumber%>
-      <a href="#"><%= f.docname%></a>
+      <a href="#" onclick="downloader(this,'<%=f.idstr%>','<%=f.name%>')"><%= f.docname%></a>
       <% } else { %>
-    <li class="list-group-item border-0" data-dlinfo="x" onclick="downloader(this,'<%=f.idstr%>','<%=f.name%>')">
+    <li class="list-group-item border-0" data-dlinfo="x" style="color:#747474">
       <%=f.filenumber%>
-        <%= f.docname%>
+      <%= f.docname%>
       <% } %>
     </li>
     <% }) %>
@@ -74,7 +135,7 @@
 
   <script>
     function radiobuttonflags() {
-      return btnradio1.checked << 2 | btnradio2.checked << 1 | btnradio3.checked
+      return btnradio1.checked << 2 | btnradio2.checked << 1 | btnradio3.checked | btnradio4.checked << 3;
     }
 
     allfiles.onchange = () => hideshowfiles(radiobuttonflags());
@@ -89,6 +150,7 @@
       // 4 new files (btnradio1)
       // 2  old (btnradio2)
       // 1 all (btnradio3)
+      // 8 set file flags
 
       history.replaceState(currentPage,"","?flags=" + flags);
 
@@ -98,18 +160,28 @@
         $('ul > [data-dlinfo="0"]').show();
         $('ul > [data-dlinfo="x"]').hide();
         $('ul > [data-dlinfo="1"]').hide();
+        $('li > input').hide();
       } else if (flags & 2) { // downloaded
         document.getElementById("btnradio2").checked = true;
 
         $('ul > [data-dlinfo="1"]').show();
         $('ul > [data-dlinfo="x"]').hide();
         $('ul > [data-dlinfo="0"]').hide();
-      } else {
+        $('li > input').hide();
+      } else if (flags & 1) {
         document.getElementById("btnradio3").checked = true;
 
         $('ul > [data-dlinfo="x"]').show();
         $('ul > [data-dlinfo="1"]').show();
         $('ul > [data-dlinfo="0"]').show();
+        $('li > input').hide();
+      } else if (flags & 8) {
+        document.getElementById("btnradio4").checked = true;
+
+        $('ul > [data-dlinfo="x"]').hide();
+        $('ul > [data-dlinfo="1"]').show();
+        $('ul > [data-dlinfo="0"]').show();
+        $('li > input').show();
       }
     }
 

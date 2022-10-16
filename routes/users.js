@@ -60,6 +60,17 @@ async function adduser1(user, pass, verified, reset) {
     return userRecord;
 }
 
+function verificationEmail(req,idstr) {
+    return `Hello,<br/>
+      Someone using this email has just signed up for "librarian". 
+      <br/>
+      If that was your intention, please use 
+      <a href="${req.headers.origin}/verify/${idstr}">this link</a> 
+      to complete your sign up.<br/>
+      Otherwise, ignore this message!
+    `;
+}
+
 export async function login(req,res) {
     let user = req.body.username;
     let pass = req.body.pass;
@@ -76,14 +87,7 @@ export async function login(req,res) {
                 from: 'librarian@vtable.com',
                 to: req.body.username,
                 subject: 'Complete your sign up',
-                html: `Hello,<br/>
-          Someone using this email has just signed up for "librarian". 
-          <br/>
-          If that was your intention, please use 
-          <a href="${req.headers.origin}/verify/${ret.value._id.toString()}">this link</a> 
-          to complete your sign up.<br/>
-          Otherwise, ignore this message!
-          `
+                html: verificationEmail(req,ret.value._id.toString())
             });
 
             req.session.user = ret.value;

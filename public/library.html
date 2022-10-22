@@ -84,14 +84,20 @@
       } else {
         console.log('download ' + fname);
         var dlurl = '/download/' + id;
-        downloadFile(dlurl,new XMLHttpRequest(),{});
+        downloadFile(dlurl,new XMLHttpRequest(),{}, (status) => {
+          if (status == 200) {
+            var li = item.closest('li');
+            li.dataset.dlinfo = "1";
+            li.getElementsByTagName("input")[0].checked = true;
 
-        var li = item.closest('li');
-        li.dataset.dlinfo = "1";
-        li.getElementsByTagName("input")[0].checked = true;
+            //item.dataset.dlinfo = "1";
+            hideshowfiles(radiobuttonflags());
+          }
+          else {
+            alert("Server error getting file");
+          }
+        });
 
-        //item.dataset.dlinfo = "1";
-        hideshowfiles(radiobuttonflags());
       }
       return true;
     }

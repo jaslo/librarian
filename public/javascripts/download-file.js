@@ -1,5 +1,5 @@
 
-function downloadFile(url,xhr, params) {
+function downloadFile(url,xhr, params, dlresponse) {
     xhr.open('GET', url, true);
     xhr.responseType = 'arraybuffer';
     xhr.onload = function () {
@@ -32,6 +32,7 @@ function downloadFile(url,xhr, params) {
                         a.download = filename;
                         document.body.appendChild(a);
                         a.click();
+                        document.body.removeChild(a);
                     }
                 } else {
                     window.location = downloadUrl;
@@ -42,6 +43,7 @@ function downloadFile(url,xhr, params) {
                 }, 100); // cleanup
             }
         }
+        dlresponse(this.status);
     };
     xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
     xhr.send($.param(params));

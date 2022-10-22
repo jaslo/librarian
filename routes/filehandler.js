@@ -57,11 +57,11 @@ export async function downloadFile(req, res, next = console.error) {
                 if (!err) {
                     res.status(200).end();
                 } else {
-                    //res.status(200).send("Error: The file is not on the server");
+                    res.status(404).send("Error: The file is not on the server");
                 }
             });
         } else {
-            res.status(200).send("Error: File ID not found");
+            res.status(404).send("Error: File ID not found");
         }
     } catch (error) {
         console.log("downloadfile catch: " + error);

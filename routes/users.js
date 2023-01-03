@@ -74,6 +74,7 @@ function verificationEmail(req,idstr) {
 export async function login(req,res) {
     let user = req.body.username;
     let pass = req.body.pass;
+    let verifyError = `You must verify your account from the email you were sent at ${user}.`;
 
     if (req.body.signin == "signup") {
         if (req.body.code != g.secretCode) {
@@ -83,15 +84,14 @@ export async function login(req,res) {
             let ret = await adduser1(user, pass, false, req.body.reset == "on");
             // use email loop?
 
-            transporter.sendMail({
+            g.transporter.sendMail({
                 from: 'librarian@vtable.com',
-                to: req.body.username,
+                to: user,
                 subject: 'Complete your sign up',
                 html: verificationEmail(req,ret.value._id.toString())
             });
 
-            req.session.user = ret.value;
-            res.redirect('/');
+            res.render('login', {fail: verifyError});
             return;
         }
     }
@@ -103,7 +103,7 @@ export async function login(req,res) {
     g.users.findOne({name: user}).then((found0) => {
         found = found0;
         if (!found) throw new Error("could not find user")
-        if (!found.verified) throw new Error("user has not been verified");
+        if (!found.verified) throw new Error(verifyError);
         return bcrypt.compare(pass, found.hashpass);
     }).then((result) => {
         req.session.user = found;

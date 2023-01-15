@@ -60,6 +60,55 @@ async function adduser1(user, pass, verified, reset) {
     return userRecord;
 }
 
+function passwordEmail(req, idstr) {
+
+    return `Hello,<br/>
+      Someone using this email has just requested a password change for "librarian". 
+      <br/>
+      If this was your intention, please use 
+      <a href="${req.headers.origin}/changepass/${idstr}">this link</a> 
+      within 15 minutes to change your password.<br/>
+      Otherwise, ignore this message!
+    `;
+}
+
+export async function setNewPassword(req,res) {
+    const id = req.body.id;
+    const user = await g.users.findOne({_id: new ObjectId(id)});
+    if (user.hashpass != req.body.validate) {
+        res.render('newpassword',{fail: 'invalid password change', id: req.params.id, validate: user.hashpass });
+    }
+    const hash = await bcrypt.hash(req.body.pass, 10);
+    let userRecord = await g.users.findOneAndUpdate(
+        {name: user},
+        {$set: {hashpass: hash}},
+        {upsert: true, returnDocument: "after"}
+    );
+    res.redirect('/')
+}
+
+export async function newPassPage(req,res) {
+    const id = req.params.id;
+    const user = await g.users.findOne({_id: new ObjectId(id)});
+
+    res.render('newpassword',{id: req.params.id, validate: user.hashpass });
+}
+
+export async function changePassRequest(req,res) { // send change password email
+    let username = req.body.username;
+    const user = await g.users.findOne({name: username});
+    const sendmail = {
+        from: 'librarian@vtable.com',
+        to: user.name,
+        subject: 'Password change request',
+        html: passwordEmail(req,user._id.toString())
+    };
+
+    g.transporter.sendMail(sendmail);
+    res.render('login', {fail: "An email has been sent to change your password"});
+
+}
+
 function verificationEmail(req,idstr) {
     return `Hello,<br/>
       Someone using this email has just signed up for "librarian". 

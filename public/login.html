@@ -15,7 +15,7 @@
 </head>
 <body>
 <p class="display-4 text-center">Librarian: Sign in/Sign up</p>
-    <form method="POST" action="/login">
+    <form id="login" method="POST" action="/login">
         <div class="container" id="sign">
             <div class="form-check form-check-inline">
                 <input class="form-check-input" type="radio" name="signin" id="signin" value="signin" checked>
@@ -49,7 +49,7 @@
                         <label style="font-size: 0.95rem" for="code">Secret signup code:</label>
                     </div>
                     <div class="col-3">
-                        <input type="password" id="code" name="code"><i class="bi bi-eye-slash" style="position:relative;left:-30px" id="togglePassword2"></i></input>
+                        <input type="password" id="pass2" name="pass2"><i class="bi bi-eye-slash" style="position:relative;left:-30px" id="togglePassword2"></i></input>
                     </div>
                 </div>
                 <div class="row border-top border-bottom">
@@ -61,7 +61,7 @@
             </div>
             <div class="mb-3 row">
                 <div class="col-8">
-                    <p class="text-info">Forgot password? Use <b>Sign up</b> with new password and secret code.</p>
+                    <p class="text-info">Forgot password? Fill email and click <a href="#" onclick="submitchangepassword()">here</a>.</p>
                 </div>
             </div>
 
@@ -69,6 +69,16 @@
         </div>
     </form>
     <script>
+
+        function submitchangepassword() {
+            if (useremail.value == '') {
+                alert("You must supply your email address to change your account password.");
+                return;
+            }
+            $("#login").attr('action','/changepass');
+            $("#login").submit();
+        }
+
         togglePassword1.addEventListener("click", function () {
             // toggle the type attribute
             const type = pass.getAttribute("type") === "password" ? "text" : "password";

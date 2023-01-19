@@ -22,6 +22,7 @@ import {renderFile as ejsRender} from 'ejs';
 import bcrypt from "bcrypt";
 import aws from "@aws-sdk/client-ses";
 import nodemailer from "nodemailer";
+import {syncToExternal} from "./extsync.js";
 
 var app = express();
 
@@ -109,10 +110,17 @@ async function main() {
     return 'done.';
 }
 
+function checkUpdate() {
+    syncToExternal();
+    setTimeout(checkUpdate, g.UpdateTimeMs);
+}
+
+
 main().then(() => {
-        app.listen(3000, () => {
-            console.log("http server up on port 3000");
-        })
+    app.listen(3000, () => {
+        console.log("http server up on port 3000");
+    });
+    checkUpdate();
 });
 
 // export default app;

@@ -97,15 +97,16 @@ export async function newPassPage(req,res) {
 export async function changePassRequest(req,res) { // send change password email
     let username = req.body.username;
     const user = await g.users.findOne({name: username});
-    const sendmail = {
-        from: 'librarian@vtable.com',
-        to: user.name,
-        subject: 'Password change request',
-        html: passwordEmail(req,user._id.toString())
-    };
-
-    g.transporter.sendMail(sendmail);
-    res.render('login', {fail: "An email has been sent to change your password"});
+    if (user) {
+        const sendmail = {
+            from: 'librarian@vtable.com',
+            to: user.name,
+            subject: 'Password change request',
+            html: passwordEmail(req, user._id.toString())
+        };
+        g.transporter.sendMail(sendmail);
+    }
+    res.render('login', {fail: "If that email is registered, an email has been sent to change the password"});
 
 }
 

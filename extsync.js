@@ -87,7 +87,7 @@ export async function syncToExternal() {
 //        console.log("failed to get");
 //    }
     const data = await client.post("https://topshelfbigband.com/wp-login.php?action=postpass",
-        qs.stringify({'post_password': g.TOpShelfPassword}), {
+        qs.stringify({'post_password': g.TopShelfPassword}), {
         headers: 'application/x-www-form-urlencoded'
     });
     console.log(data.config.jar.toJSON());
@@ -181,7 +181,6 @@ export async function syncToExternal() {
                 } catch (e) {
                     console.log(e);
                 }
-                /*
                 await g.files.findOneAndUpdate(
                     {docname: k},
                     {
@@ -195,7 +194,6 @@ export async function syncToExternal() {
                     },
                     {upsert: true, returnNewDocument: true}
                 );
-                 */
             } else { // no remote url, just an entry
                 await g.files.findOneAndUpdate(
                     {docname: k},
@@ -203,7 +201,6 @@ export async function syncToExternal() {
                         $set: {
                             filenumber: remoteFiles[k].filenumber,
                             docname: k,
-                            downloads: []
                         }
                     },
                     {upsert: true, returnNewDocument: true}

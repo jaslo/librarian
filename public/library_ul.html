@@ -113,28 +113,25 @@
     }
   </script>
 <div class="container">
-  <% files.forEach((f) => { %>
-  <div class="row" style="margin-top:0;border-top:0;height:20px;flex-wrap:nowrap" data-dlinfo="<%=f.downloads ? 1 : (f.name ? 0 : 'x') %>">
-    <div class="col-sm-1"  style="display:none">
-      <input type="checkbox" onclick="toggledownload(this, '<%=f.idstr%>', '<%=f.name%>')"
-      <% if (f.downloads) { %>
-      checked
+  <ul class="list-group">
+    <% files.forEach((f) => {
+      if (f.name) { %>
+    <li class="list-group-item border-0" data-dlinfo="<%=f.downloads ? 1 : 0%>">
+      <input type="checkbox" onclick="toggledownload(this, '<%=f.idstr%>', '<%=f.name%>')" style="display:none"
+        <% if (f.downloads) { %>
+        checked
       <% } %>
       />
-
-    </div>
-    <div class="col-sm-1" style="width:4%">
       <%=f.filenumber%>
-    </div>
-    <div class="col-10">
-      <% if (f.name) { %>
       <a href="#" onclick="downloader(this,'<%=f.idstr%>','<%=f.name%>')"><%= f.docname%></a>
       <% } else { %>
-        <%= f.docname%>
+    <li class="list-group-item border-0" data-dlinfo="x" style="color:#747474">
+      <%=f.filenumber%>
+      <%= f.docname%>
       <% } %>
-    </div>
-  </div>
-  <% }) %>
+    </li>
+    <% }) %>
+  </ul>
 </div>
 
   <script>
@@ -161,31 +158,31 @@
       if (flags & 4) { // undownloaded files
         document.getElementById("btnradio1").checked = true;
 
-        $('div > [data-dlinfo="0"]').show();
-        $('div > [data-dlinfo="x"]').hide();
-        $('div > [data-dlinfo="1"]').hide();
-//        $('div > input').hide();
+        $('ul > [data-dlinfo="0"]').show();
+        $('ul > [data-dlinfo="x"]').hide();
+        $('ul > [data-dlinfo="1"]').hide();
+        $('li > input').hide();
       } else if (flags & 2) { // downloaded
         document.getElementById("btnradio2").checked = true;
 
-        $('div > [data-dlinfo="1"]').show();
-        $('div > [data-dlinfo="x"]').hide();
-        $('div > [data-dlinfo="0"]').hide();
-//        $('div > input').hide();
+        $('ul > [data-dlinfo="1"]').show();
+        $('ul > [data-dlinfo="x"]').hide();
+        $('ul > [data-dlinfo="0"]').hide();
+        $('li > input').hide();
       } else if (flags & 1) {
         document.getElementById("btnradio3").checked = true;
 
-        $('div > [data-dlinfo="x"]').show();
-        $('div > [data-dlinfo="1"]').show();
-        $('div > [data-dlinfo="0"]').show();
-//        $('div > input').hide();
+        $('ul > [data-dlinfo="x"]').show();
+        $('ul > [data-dlinfo="1"]').show();
+        $('ul > [data-dlinfo="0"]').show();
+        $('li > input').hide();
       } else if (flags & 8) {
         document.getElementById("btnradio4").checked = true;
 
-        $('div > [data-dlinfo="x"]').hide();
-        $('div > [data-dlinfo="1"]').show();
-        $('div > [data-dlinfo="0"]').show();
-//        $('div > input').show();
+        $('ul > [data-dlinfo="x"]').hide();
+        $('ul > [data-dlinfo="1"]').show();
+        $('ul > [data-dlinfo="0"]').show();
+        $('li > input').show();
 
       }
     }

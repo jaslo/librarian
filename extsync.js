@@ -13,6 +13,8 @@ import _ from 'lodash';
 
 import cheerio from 'cheerio';
 
+import { NewFileAdd } from './routes/filehandler.js'
+
 const jar = new CookieJar();
 const client = wrapper(axios.create({jar}));
 
@@ -181,19 +183,9 @@ export async function syncToExternal() {
                 } catch (e) {
                     console.log(e);
                 }
-                await g.files.findOneAndUpdate(
-                    {docname: k},
-                    {
-                        $set: {
-                            filenumber: remoteFiles[k].filenumber,
-                            docname: k,
-                            name: filename,
-                            urlpath: filename,
-                            downloads: []
-                        }
-                    },
-                    {upsert: true, returnNewDocument: true}
-                );
+
+                // Add a new file
+                await NewFileAdd(k, filename, remoteFiles[k]);
             } else { // no remote url, just an entry
                 await g.files.findOneAndUpdate(
                     {docname: k},

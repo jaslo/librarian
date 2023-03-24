@@ -72,6 +72,17 @@ function passwordEmail(req, idstr) {
     `;
 }
 
+function verificationEmail(req,idstr) {
+    return `Hello,<br/>
+      Someone using this email has just signed up for "librarian". 
+      <br/>
+      If that was your intention, please use 
+      <a href="${req.headers.origin}/verify/${idstr}">this link</a> 
+      to complete your sign up.<br/>
+      Otherwise, ignore this message!
+    `;
+}
+
 export async function setNewPassword(req,res) {
     const id = req.body.id;
     const user = await g.users.findOne({_id: new ObjectId(id)});
@@ -108,17 +119,6 @@ export async function changePassRequest(req,res) { // send change password email
     }
     res.render('login', {fail: "If that email is registered, an email has been sent to change the password"});
 
-}
-
-function verificationEmail(req,idstr) {
-    return `Hello,<br/>
-      Someone using this email has just signed up for "librarian". 
-      <br/>
-      If that was your intention, please use 
-      <a href="${req.headers.origin}/verify/${idstr}">this link</a> 
-      to complete your sign up.<br/>
-      Otherwise, ignore this message!
-    `;
 }
 
 export async function login(req,res) {

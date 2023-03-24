@@ -46,6 +46,12 @@
       text-decoration: underline;
       background-color: transparent;
     }
+    .resetcheck {
+      font-size: 15px;
+    }
+    .editbutton {
+      font-size: 15px;
+    }
   </style>
 </head>
 <body>
@@ -55,24 +61,54 @@
   <button id="logout" name="logout" onclick="window.location.href = '/logout';">Sign out</button>
 </div>
 
+<!-- Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Edit/Delete Library Entry</h5>
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p><input id="filename" value="name"/></p>
+        <p><input id="filenumber" value="number"/></p>
+        <p>Modal body text goes here.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="delete" class="btn btn-secondary" data-bs-dismiss="modal">Delete</button>
+        <button type="button" id="ignore" class="btn btn-secondary" data-bs-dismiss="modal">Ignore</button>
+        <button type="button" id="save" class="btn btn-primary" data-bs-dismiss="modal">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
   <div class="container">
   <div class="btn-group" role="group" id="allfiles" aria-label="Select">
     <div class="form-check form-check-inline">
-      <input class="form-check-input" type="radio" name="inlineRadioOptions" id="btnradio3" value="3">
-      <label class="form-check-label" for="btnradio3">Show all files</label>
+      <input class="form-check-input" type="radio" name="inlineRadioOptions" id="btnradio1" value="1">
+      <label class="form-check-label" for="btnradio1">Show all files</label>
     </div>
     <div class="form-check form-check-inline">
       <input class="form-check-input" type="radio" name="inlineRadioOptions" id="btnradio2" value="2">
       <label class="form-check-label" for="btnradio2">Show old (downloaded) files</label>
     </div>
     <div class="form-check form-check-inline">
-      <input class="form-check-input" type="radio" name="inlineRadioOptions" id="btnradio1" value="1">
-      <label class="form-check-label" for="btnradio1">Show new files</label>
+      <input class="form-check-input" type="radio" name="inlineRadioOptions" id="btnradio3" value="3">
+      <label class="form-check-label" for="btnradio3">Show new files</label>
     </div>
     <div class="form-check form-check-inline">
       <input class="form-check-input" type="radio" name="inlineRadioOptions" id="btnradio4" value="4">
       <label class="form-check-label" for="btnradio4">Reset files</label>
     </div>
+    <% if (userflags == 2) { %>
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="radio" name="inlineRadioOptions" id="btnradio5" value="5">
+      <label class="form-check-label" for="btnradio5">Edit files</label>
+    </div>
+    <% } %>
   </div>
   </div>
   <script>
@@ -105,26 +141,52 @@
     function toggledownload(item, id, fname) {
       $.get('/toggle/' + id, function(data, status) {
       });
-      var li = item.closest('li');
-      li.dataset.dlinfo = 1 - li.dataset.dlinfo;
-      li.getElementsByTagName("input")[0].checked = (li.dataset.dlinfo == "1");
+      var div = item.closest('.row');
+      div.dataset.dlinfo = 1 - div.dataset.dlinfo;
+      div.getElementsByTagName("input")[0].checked = (div.dataset.dlinfo == "1");
       hideshowfiles(radiobuttonflags());
       return true;
     }
   </script>
+
+<!-- top row, column headers -->
 <div class="container">
+  <div class="row" style="margin-top:0;border-top:0;height:20px;flex-wrap:nowrap">
+    <div class="col-sm-1 resetcheck" style="font-size:10px">
+      <p class="text-center">Downloaded</p>
+    </div>
+    <div class="col-sm-1 editbutton" style="font-size:10px">
+      <p class="text-left">Edit</p>
+    </div>
+    <div class="col-sm-1" style="width:4%;font-size:10px">
+      <p class="text-left">Number</p>
+    </div>
+    <div class="col-10">
+      <p class="text-center" style="width:20%;font-size:10px">Name
+        <%if (flags != 8) { %>
+        (click to download)
+        <% } %>
+      </p>
+    </div>
+  </div>
+
   <% files.forEach((f) => { %>
   <div class="row" style="margin-top:0;border-top:0;height:20px;flex-wrap:nowrap" data-dlinfo="<%=f.downloads ? 1 : (f.name ? 0 : 'x') %>">
-    <div class="col-sm-1"  style="display:none">
-      <input type="checkbox" onclick="toggledownload(this, '<%=f.idstr%>', '<%=f.name%>')"
+
+    <div class="col-sm-1 resetcheck" style="">
+      <input type="checkbox" onclick="toggledownload(this, '<%=f.idstr%>', '<%=f.name%>')" style="width:50%;horiz-align: center"
       <% if (f.downloads) { %>
       checked
       <% } %>
       />
-
     </div>
+
+    <div class="col-sm-1 editbutton" style="display:none">
+      <input type="button" style="height:18px;font-size:12px;line-height:0" onclick="showedit(this, '<%=f.idstr%>', '<%=f.name%>')" value="Edit"/>
+    </div>
+
     <div class="col-sm-1" style="width:4%">
-      <%=f.filenumber%>
+      <p class="text-right"><%=f.filenumber%></p>
     </div>
     <div class="col-10">
       <% if (f.name) { %>
@@ -138,8 +200,43 @@
 </div>
 
   <script>
+    function showedit(item, id, fname) {
+      var row = $(item).closest(".row");
+      var number = $(row.children()[2]).text().trim();
+      var name = $(row.children()[3]).text().trim();
+      $('#editModal').find('#filename').val(name);
+      $('#editModal').find('#filenumber').val(number);
+
+      $('#editModal').modal("show");
+    }
+
+    $('#editModal').on('show.bs.modal', function (event) {
+      var button = $(event.relatedTarget) // Button that triggered the modal
+
+      //$('#editModal > #filename').attr("value","blah blah");
+
+      //var recipient = button.data('whatever') // Extract info from data-* attributes
+      // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+      // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+      //var modal = $(this)
+      //modal.find('.modal-title').text('New message to ' + recipient)
+      //modal.find('.modal-body input').val(recipient)
+    });
+
+    $('#editModal').on('hide.bs.modal', function (event) {
+      var $activeElement = $(document.activeElement);
+      button = $activeElement;
+      if (button.id == "delete") MessageBox("deleted");
+      if (button.id == "ignore") MessageBox("ignored");
+      if (button.id == "save") MessageBox("saved");
+    });
+
     function radiobuttonflags() {
-      return btnradio1.checked << 2 | btnradio2.checked << 1 | btnradio3.checked | btnradio4.checked << 3;
+      if (btnradio1.checked) return 1;
+      if (btnradio2.checked) return 2;
+      if (btnradio3.checked) return 3;
+      if (btnradio4.checked) return 4;
+      if (btnradio5.checked) return 5;
     }
 
     allfiles.onchange = () => hideshowfiles(radiobuttonflags());
@@ -158,35 +255,50 @@
 
       history.replaceState(currentPage,"","?flags=" + flags);
 
-      if (flags & 4) { // undownloaded files
-        document.getElementById("btnradio1").checked = true;
+      if (flags == 3) { // undownloaded files
+        document.getElementById("btnradio3").checked = true;
 
         $('div > [data-dlinfo="0"]').show();
         $('div > [data-dlinfo="x"]').hide();
         $('div > [data-dlinfo="1"]').hide();
+        $(".resetcheck").hide();
+        $(".editbutton").hide();
 //        $('div > input').hide();
-      } else if (flags & 2) { // downloaded
+      } else if (flags == 2) { // downloaded
         document.getElementById("btnradio2").checked = true;
 
         $('div > [data-dlinfo="1"]').show();
         $('div > [data-dlinfo="x"]').hide();
         $('div > [data-dlinfo="0"]').hide();
+        $(".resetcheck").hide();
+        $(".editbutton").hide();
 //        $('div > input').hide();
-      } else if (flags & 1) {
-        document.getElementById("btnradio3").checked = true;
+      } else if (flags == 1) {
+        document.getElementById("btnradio1").checked = true;
 
         $('div > [data-dlinfo="x"]').show();
         $('div > [data-dlinfo="1"]').show();
         $('div > [data-dlinfo="0"]').show();
+        $(".resetcheck").hide();
+        $(".editbutton").hide();
 //        $('div > input').hide();
-      } else if (flags & 8) {
+      } else if (flags == 4) {
         document.getElementById("btnradio4").checked = true;
 
         $('div > [data-dlinfo="x"]').hide();
         $('div > [data-dlinfo="1"]').show();
         $('div > [data-dlinfo="0"]').show();
+        $(".resetcheck").show();
+        $(".editbutton").hide();
 //        $('div > input').show();
 
+      } else if (flags == 5) {
+        document.getElementById("btnradio5").checked = true;
+        $('div > [data-dlinfo="x"]').show();
+        $('div > [data-dlinfo="1"]').show();
+        $('div > [data-dlinfo="0"]').show();
+        $(".resetcheck").hide();
+        $(".editbutton").show();
       }
     }
 

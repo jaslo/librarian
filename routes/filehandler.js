@@ -19,6 +19,24 @@ export function toggleFile(req, res, next) {
     });
 }
 
+export function NewFileAdd(docname, filename, filenumber) {
+    g.newFiles.push({docname, filename, filenumber});
+    return g.files.findOneAndUpdate(
+        {docname: docname},
+        {
+            $set: {
+                name: filename,
+                filenumber: filenumber,
+                docname: docname,
+                urlpath: filename,
+                downloads: []
+            }
+        },
+        {upsert: true, returnNewDocument: true}
+    );
+}
+
+
 async function resetDownloaded(req, fileid) {
    await g.files.findOneAndUpdate({_id: new ObjectId(fileid)},
         {$pull: {downloads: {$eq: req.session.user._id}}});
@@ -151,19 +169,8 @@ export async function uploadFiles(req, res) {
                 // find the corresponding fields in req.body
                 let fmeta = filemap[ff.filename];
                 if (!fmeta) throw "missing metadata";
-                await g.files.findOneAndUpdate(
-                    {docname: fmeta.docname},
-                    {
-                        $set: {
-                            name: ff.filename,
-                            filenumber: fmeta.filenumber,
-                            docname: fmeta.docname || ff.filename,
-                            urlpath: ff.filename,
-                            downloads: []
-                        }
-                    },
-                    {upsert: true, returnNewDocument: true}
-                );
+
+                await NewFileAdd(fmeta.docname, ff.filename, fmeta.filenumber);
                 updated++;
                 if (updated == count - 1) {
                     res.redirect('/');

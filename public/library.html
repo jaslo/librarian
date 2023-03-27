@@ -72,9 +72,10 @@
         </button>
       </div>
       <div class="modal-body">
-        <p><input id="filename" value="name"/></p>
-        <p><input id="filenumber" value="number"/></p>
-        <p>Modal body text goes here.</p>
+        <p><input id="filename" value="name" style="width:30em"/></p>
+        <p><input id="filenumber" value="number" style="width:10em"/></p>
+        <p><span id="filepath">text</span></p>
+        <input id="fileid" style="display:none"/>
       </div>
       <div class="modal-footer">
         <button type="button" id="delete" class="btn btn-secondary" data-bs-dismiss="modal">Delete</button>
@@ -122,9 +123,10 @@
         var dlurl = '/download/' + id;
         downloadFile(dlurl,new XMLHttpRequest(),{}, (status) => {
           if (status == 200) {
-            var li = item.closest('li');
-            li.dataset.dlinfo = "1";
-            li.getElementsByTagName("input")[0].checked = true;
+            var row = $(item).closest(".row");
+
+            row.data('dlinfo', "1");
+            row.find("input[type=checkbox]").prop('checked', true);
 
             //item.dataset.dlinfo = "1";
             hideshowfiles(radiobuttonflags());
@@ -143,7 +145,7 @@
       });
       var div = item.closest('.row');
       div.dataset.dlinfo = 1 - div.dataset.dlinfo;
-      div.getElementsByTagName("input")[0].checked = (div.dataset.dlinfo == "1");
+      $(div).find("input[type=checkbox]").prop('checked',div.dataset.dlinfo == "1");
       hideshowfiles(radiobuttonflags());
       return true;
     }
@@ -206,29 +208,30 @@
       var name = $(row.children()[3]).text().trim();
       $('#editModal').find('#filename').val(name);
       $('#editModal').find('#filenumber').val(number);
+      $('#editModal').find('#filepath').text(fname);
+      $('#editModal').find('#fileid').val(id);
 
       $('#editModal').modal("show");
     }
 
-    $('#editModal').on('show.bs.modal', function (event) {
-      var button = $(event.relatedTarget) // Button that triggered the modal
-
-      //$('#editModal > #filename').attr("value","blah blah");
-
-      //var recipient = button.data('whatever') // Extract info from data-* attributes
-      // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
-      // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
-      //var modal = $(this)
-      //modal.find('.modal-title').text('New message to ' + recipient)
-      //modal.find('.modal-body input').val(recipient)
-    });
-
     $('#editModal').on('hide.bs.modal', function (event) {
       var $activeElement = $(document.activeElement);
-      button = $activeElement;
-      if (button.id == "delete") MessageBox("deleted");
-      if (button.id == "ignore") MessageBox("ignored");
-      if (button.id == "save") MessageBox("saved");
+      var button = $activeElement;
+      var id = button.attr("id");
+      var fileid = $('#editModal').find('#fileid').val()
+      if (id == "delete") {
+        $.post('/editdelete/' + fileid, {}, function () {
+          history.go(0);
+        })
+      }
+      else if (id == "save") {
+        $.post('/editsave/' + fileid, {
+          filename: $('#editModal').find('#filename').val(),
+          filenumber: $('#editModal').find('#filename').val()
+        }, function () {
+          history.go(0);
+        });
+      }
     });
 
     function radiobuttonflags() {

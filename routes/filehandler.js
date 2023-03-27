@@ -1,5 +1,5 @@
 import g from "../globals.js";
-import {ObjectID as ObjectId} from "mongodb";
+import {ObjectId} from "mongodb";
 import fs from "fs";
 
 
@@ -59,6 +59,30 @@ async function setDownloaded(req, fileid) {
     }
     return null;
 }
+
+export async function editDelete(req, res, next = console.error) {
+    const id = req.params.id;
+    await g.files.findOneAndDelete({_id: new ObjectId(fileid)});
+}
+
+export async function editSave(req, res, next = console.error) {
+    const id = req.params.id;
+    var newname = req.body.filename;
+    var newnum = req.body.filenumber;
+
+    await g.files.findOneAndUpdate({
+        filter: {_id: new ObjectId(fileid)},
+        update: {
+            $set: {
+                name: newname,
+                filenumber: parseInt(newnum),
+                docname: newname
+            }
+        }
+    });
+
+}
+
 
 export async function downloadFile(req, res, next = console.error) {
     try {

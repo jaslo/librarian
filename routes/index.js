@@ -1,5 +1,5 @@
 import g from '../globals.js';
-import {uploadFiles, downloadFile, toggleFile } from './filehandler.js';
+import {uploadFiles, downloadFile, toggleFile, editDelete, editSave } from './filehandler.js';
 import {login, logout, adduser, verify, newPassPage, changePassRequest, setNewPassword} from './users.js';
 
 export function setRoutes(router) {
@@ -15,6 +15,9 @@ export function setRoutes(router) {
   router.get('/changepass/:id', newPassPage);
   router.post('/changepass', changePassRequest);
   router.post('/newpass', setNewPassword);
+  router.post('/editdelete/:id', editDelete);
+  router.post('/editsave/:id', editSave);
+
 }
 
 /* GET home page. */

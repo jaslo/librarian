@@ -41,7 +41,7 @@ function upload(req,res) {
 
 function showLibrary(req,res) {
   // for testing
-  req.session.user.flags = g.userflags.SHOW_EDIT;
+  //req.session.user.flags = g.userflags.SHOW_EDIT;
 
   g.files.find({}, {
     projection: {_id: 0, idstr: {$toString:"$_id"}, name: 1, filenumber: 1, docname: 1, downloads: {$elemMatch: { $eq: req.session.user._id}}},

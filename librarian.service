@@ -8,7 +8,7 @@ StartLimitBurst=5
 
 [Service]
 Restart=on-failure
-RestartSec=5s
+RestartSec=10s
 
 ExecStart=/home/ubuntu/librarian/app.js
 

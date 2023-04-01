@@ -91,8 +91,8 @@ export async function setNewPassword(req,res) {
     }
     const hash = await bcrypt.hash(req.body.pass, 10);
     let userRecord = await g.users.findOneAndUpdate(
-        {name: user},
-        {$set: {hashpass: hash}},
+        {_id: new ObjectId(id)},
+        {$set: {hashpass: hash, verified: true}},
         {upsert: true, returnDocument: "after"}
     );
     res.redirect('/')

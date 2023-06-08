@@ -35,6 +35,9 @@ export async function syncToExternal() {
 
     console.log("here");
 
+    // TODO: move this to notification section
+    g.newFiles = [];
+
     // login to wordpress download part:
     const dlpart = await client.post("https://www.topshelfbigband.com/wp-login.php",
         qs.stringify({

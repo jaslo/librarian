@@ -26,7 +26,8 @@ export async function syncToExternal() {
     }).toArray();
 
     const localFiles = _.reduce(allfiles, (acc, item) => {
-        acc[item.docname] = {
+        acc[item.docname + (String(item.filenumber) || '')] = {
+            docname: item.docname,
             filenumber: item.filenumber,
             name: item.name
         };
@@ -145,7 +146,8 @@ export async function syncToExternal() {
         name = namenum.substr(n + 1);
         let fnum = parseInt(num.trim());
         if (isNaN(fnum)) fnum = num.trim();
-        acc[name.trim()] = {
+        acc[name.trim() + (num.trim() || '')] = {
+            docname: name.trim(),
             filenumber: fnum,
             name: link
         };
@@ -188,14 +190,14 @@ export async function syncToExternal() {
                 }
 
                 // Add a new file
-                await NewFileAdd(k, filename, remoteFiles[k]);
+                await NewFileAdd(remoteFiles[k].docname, filename, remoteFiles[k].filenumber);
             } else { // no remote url, just an entry
                 await g.files.findOneAndUpdate(
-                    {docname: k},
+                    {docname: remoteFiles[k].docname},
                     {
                         $set: {
                             filenumber: remoteFiles[k].filenumber,
-                            docname: k,
+                            docname: remotefiles[k].docname,
                         }
                     },
                     {upsert: true, returnNewDocument: true}

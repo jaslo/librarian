@@ -120,6 +120,7 @@ main().then(() => {
     app.listen(3000, () => {
         console.log("http server up on port 3000");
     });
+    //checkUpdate(); for debugging!
     setTimeout(checkUpdate, g.UpdateTimeMs);
 });
 

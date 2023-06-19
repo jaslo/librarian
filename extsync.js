@@ -179,12 +179,14 @@ export async function syncToExternal() {
                         },
                         responseType: 'stream'
                     });
+
                     urlstream.data.pipe(writer);
                     writer.on('error', err => {
                         writer.close();
                         console.log('write file error: ' + err);
                     });
                     await finishedAsync(writer);
+                    writer.close();
                 } catch (e) {
                     console.log(e);
                 }
@@ -192,16 +194,20 @@ export async function syncToExternal() {
                 // Add a new file
                 await NewFileAdd(remoteFiles[k].docname, filename, remoteFiles[k].filenumber);
             } else { // no remote url, just an entry
-                await g.files.findOneAndUpdate(
-                    {docname: remoteFiles[k].docname},
-                    {
-                        $set: {
-                            filenumber: remoteFiles[k].filenumber,
-                            docname: remotefiles[k].docname,
-                        }
-                    },
-                    {upsert: true, returnNewDocument: true}
-                );
+                try {
+                    await g.files.findOneAndUpdate(
+                        {docname: remoteFiles[k].docname, filenumber: remoteFiles[k].filenumber},
+                        {
+                            $set: {
+                                filenumber: remoteFiles[k].filenumber,
+                                docname: remoteFiles[k].docname,
+                            }
+                        },
+                        {upsert: true, returnNewDocument: true}
+                    );
+                } catch (e) {
+                    console.log(e);
+                }
             }
         }
     }

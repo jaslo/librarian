@@ -22,7 +22,7 @@ export function toggleFile(req, res, next) {
 export function NewFileAdd(docname, filename, filenumber) {
     g.newFiles.push({docname, filename, filenumber});
     return g.files.findOneAndUpdate(
-        {docname: docname},
+        {docname: docname, filenumber: filenumber},
         {
             $set: {
                 name: filename,
